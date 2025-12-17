@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
@@ -9,11 +9,17 @@ export default function Login() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const { login } = useAuth();
+    const { login, user } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
-    const from = location.state?.from?.pathname || '/';
+    const from = location.state?.from?.pathname || '/app';
+
+    useEffect(() => {
+        if (user) {
+            navigate(from, { replace: true });
+        }
+    }, [user, navigate, from]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -38,13 +44,11 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-4">
+        <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 p-4">
             <div className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-8 transform transition-all hover:scale-[1.01]">
                 <div className="text-center mb-8">
-                    <div className="inline-flex justify-center items-center w-16 h-16 rounded-full bg-white/20 mb-4 shadow-lg backdrop-blur-sm">
-                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
+                    <div className="inline-flex justify-center items-center mb-6">
+                        <img src="/levora-logo.jpg" alt="Levora" className="h-20 w-auto rounded-xl shadow-lg" />
                     </div>
                     <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
                     <p className="text-white/70">Sign in to access your HRIMS dashboard</p>
@@ -91,7 +95,7 @@ export default function Login() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-white text-indigo-600 rounded-xl py-3.5 font-bold text-lg hover:bg-indigo-50 hover:shadow-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 transform active:scale-95"
+                        className="w-full bg-white text-slate-900 rounded-xl py-3.5 font-bold text-lg hover:bg-indigo-50 hover:shadow-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 transform active:scale-95"
                     >
                         {loading ? (
                             <>

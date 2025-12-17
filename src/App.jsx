@@ -23,6 +23,7 @@ import Settings from './pages/Settings';
 import Attendance from './pages/Attendance';
 import EmployeeSelfService from './pages/EmployeeSelfService';
 import Login from './pages/Login';
+import LandingPage from './pages/LandingPage';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -33,8 +34,9 @@ function App() {
       <HashRouter>
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Layout />}>
+            <Route path="/app" element={<Layout />}>
               <Route index element={<RoleBasedDashboard />} />
               <Route path="tenants" element={
                 <ProtectedRoute allowedRoles={['super_admin']}>

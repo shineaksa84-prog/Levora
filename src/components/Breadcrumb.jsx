@@ -3,6 +3,7 @@ import { ChevronRight, Home } from 'lucide-react';
 
 const routeLabels = {
     '': 'Dashboard',
+    'app': 'Dashboard', // Map 'app' to Dashboard
     'candidates': 'Candidates',
     'employees': 'Employees',
     'jobs': 'Jobs',
@@ -24,7 +25,7 @@ export default function Breadcrumb() {
     }
 
     const breadcrumbs = [
-        { label: 'Home', path: '/', icon: Home }
+        { label: 'Home', path: '/app', icon: Home } // Point to /app
     ];
 
     let currentPath = '';
