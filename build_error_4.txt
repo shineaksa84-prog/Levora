@@ -1,0 +1,31 @@
+
+> hrims-ai@0.0.0 build
+> vite build
+
+[36mvite v7.2.4 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32m✓[39m 1970 modules transformed.
+[31m✗[39m Build failed in 14.11s
+[31merror during build:
+[31m[vite:esbuild] Transform failed with 1 error:
+C:/Users/Lenovo/.gemini/antigravity/scratch/hrims-ai/src/features/attendance/AttendanceRules.jsx:132:61: ERROR: Expected identifier but found "5"[31m
+file: [36mC:/Users/Lenovo/.gemini/antigravity/scratch/hrims-ai/src/features/attendance/AttendanceRules.jsx:132:61[31m
+[33m
+[33mExpected identifier but found "5"[33m
+130 |                      <h4 className="font-bold text-blue-900 mb-2">Auto-Correction Tips</h4>
+131 |                      <ul className="text-sm text-blue-800 space-y-2 list-disc pl-4">
+132 |                          <li>Enable "Smart Grace" to ignore < 5 min delays on rainy days.</li>
+    |                                                               ^
+133 |                          <li>Link "Work from Home" requests to attendance automatically to prevent absent marking.</li>
+134 |                      </ul>
+[31m
+    at failureErrorWithLog (C:\Users\Lenovo\.gemini\antigravity\scratch\hrims-ai\node_modules\esbuild\lib\main.js:1467:15)
+    at C:\Users\Lenovo\.gemini\antigravity\scratch\hrims-ai\node_modules\esbuild\lib\main.js:736:50
+    at responseCallbacks.<computed> (C:\Users\Lenovo\.gemini\antigravity\scratch\hrims-ai\node_modules\esbuild\lib\main.js:603:9)
+    at handleIncomingPacket (C:\Users\Lenovo\.gemini\antigravity\scratch\hrims-ai\node_modules\esbuild\lib\main.js:658:12)
+    at Socket.readFromStdout (C:\Users\Lenovo\.gemini\antigravity\scratch\hrims-ai\node_modules\esbuild\lib\main.js:581:7)
+    at Socket.emit (node:events:518:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)[39m
