@@ -103,9 +103,8 @@ export const ROLE_CONFIG = {
             { name: 'Employees', href: `${BASE}/employees`, icon: Users },
             { name: 'Attendance', href: `${BASE}/attendance`, icon: Clock },
             { name: 'Onboarding', href: `${BASE}/employees`, icon: UserCheck },
-            { name: 'HR Documents', href: `${BASE}/documents`, icon: FileText },
-            { name: 'Exit Management', href: `${BASE}/offboarding`, icon: LogOut },
             { name: 'Compliance', href: `${BASE}/compliance`, icon: Shield },
+            { name: 'Offboarding', href: `${BASE}/offboarding`, icon: LogOut },
             { name: 'Settings', href: `${BASE}/settings`, icon: Settings },
         ]
     },
@@ -114,10 +113,10 @@ export const ROLE_CONFIG = {
         dashboard: 'PayrollDashboard',
         navigation: [
             { name: 'Dashboard', href: `${BASE}`, icon: LayoutDashboard },
-            { name: 'Payroll Run', href: `${BASE}/compensation`, icon: DollarSign },
-            { name: 'Salary Components', href: `${BASE}/compensation`, icon: CreditCard },
-            { name: 'Reimbursements', href: `${BASE}/compensation`, icon: FileCheck },
-            { name: 'Reports', href: `${BASE}/analytics`, icon: BarChart3 },
+            { name: 'Salary Run', href: `${BASE}/compensation`, icon: DollarSign },
+            { name: 'Components', href: `${BASE}/compensation`, icon: CreditCard },
+            { name: 'Analytics', href: `${BASE}/analytics`, icon: BarChart3 },
+            { name: 'Compliance', href: `${BASE}/compliance`, icon: Shield },
             { name: 'Settings', href: `${BASE}/settings`, icon: Settings },
         ]
     },
@@ -130,7 +129,7 @@ export const ROLE_CONFIG = {
             { name: 'Attendance', href: `${BASE}/attendance`, icon: Clock },
             { name: 'Interviews', href: `${BASE}/interviews`, icon: Video },
             { name: 'Performance', href: `${BASE}/performance`, icon: TrendingUp },
-            { name: 'Approvals', href: `${BASE}/approvals`, icon: CheckSquare },
+            { name: 'Automation', href: `${BASE}/automation`, icon: Zap },
             { name: 'Settings', href: `${BASE}/settings`, icon: Settings },
         ]
     },
@@ -139,12 +138,11 @@ export const ROLE_CONFIG = {
         dashboard: 'EmployeeDashboard',
         navigation: [
             { name: 'Dashboard', href: `${BASE}`, icon: LayoutDashboard },
-            { name: 'My Profile', href: `${BASE}/profile`, icon: User },
-            { name: 'Self-Service', href: `${BASE}/self-service`, icon: Ticket },
+            { name: 'Self Service', href: `${BASE}/self-service`, icon: Ticket },
             { name: 'Attendance', href: `${BASE}/attendance`, icon: Clock },
-            { name: 'Leave', href: `${BASE}/leave`, icon: Calendar },
-            { name: 'Payslips', href: `${BASE}/compensation`, icon: FileText },
-            { name: 'Helpdesk', href: `${BASE}/helpdesk`, icon: HelpCircle },
+            { name: 'Performance', href: `${BASE}/performance`, icon: TrendingUp },
+            { name: 'Compensation', href: `${BASE}/compensation`, icon: FileText },
+            { name: 'Engagement', href: `${BASE}/engagement`, icon: Heart },
             { name: 'Settings', href: `${BASE}/settings`, icon: Settings },
         ]
     },
@@ -153,10 +151,9 @@ export const ROLE_CONFIG = {
         dashboard: 'CandidateDashboard',
         navigation: [
             { name: 'Dashboard', href: `${BASE}`, icon: LayoutDashboard },
-            { name: 'My Applications', href: `${BASE}/applications`, icon: FileText },
-            { name: 'Job Listings', href: `${BASE}/jobs`, icon: Briefcase },
+            { name: 'Jobs', href: `${BASE}/jobs`, icon: Briefcase },
             { name: 'Interviews', href: `${BASE}/interviews`, icon: Video },
-            { name: 'Profile', href: `${BASE}/profile`, icon: User },
+            { name: 'Settings', href: `${BASE}/settings`, icon: Settings },
         ]
     }
 };

@@ -35,17 +35,17 @@ export default function CommandPalette({ isOpen, onClose }) {
 
     // Navigation commands
     const navigationCommands = [
-        { id: 'nav-dashboard', title: 'Dashboard', category: 'Navigation', icon: 'Home', url: '/', keywords: ['home', 'overview'] },
-        { id: 'nav-candidates', title: 'Candidates', category: 'Navigation', icon: 'UserPlus', url: '/candidates', keywords: ['applicants', 'recruitment'] },
-        { id: 'nav-employees', title: 'Employees', category: 'Navigation', icon: 'Users', url: '/employees', keywords: ['staff', 'team'] },
-        { id: 'nav-jobs', title: 'Jobs', category: 'Navigation', icon: 'Briefcase', url: '/jobs', keywords: ['positions', 'openings'] },
-        { id: 'nav-analytics', title: 'Analytics', category: 'Navigation', icon: 'BarChart3', url: '/analytics', keywords: ['reports', 'metrics'] },
-        { id: 'nav-performance', title: 'Performance', category: 'Navigation', icon: 'TrendingUp', url: '/performance', keywords: ['reviews', 'goals'] },
-        { id: 'nav-learning', title: 'Learning', category: 'Navigation', icon: 'Award', url: '/learning', keywords: ['training', 'courses'] },
-        { id: 'nav-compensation', title: 'Compensation', category: 'Navigation', icon: 'FileText', url: '/compensation', keywords: ['payroll', 'salary'] },
-        { id: 'nav-engagement', title: 'Engagement', category: 'Navigation', icon: 'Heart', url: '/engagement', keywords: ['surveys', 'wellness'] },
-        { id: 'nav-offboarding', title: 'Offboarding', category: 'Navigation', icon: 'LogOut', url: '/offboarding', keywords: ['exit', 'resignation'] },
-        { id: 'nav-automation', title: 'Automation', category: 'Navigation', icon: 'Settings', url: '/automation', keywords: ['workflows', 'ai'] }
+        { id: 'nav-dashboard', title: 'Dashboard', category: 'Navigation', icon: 'Home', url: '/app', keywords: ['home', 'overview'] },
+        { id: 'nav-candidates', title: 'Candidates', category: 'Navigation', icon: 'UserPlus', url: '/app/candidates', keywords: ['applicants', 'recruitment'] },
+        { id: 'nav-employees', title: 'Employees', category: 'Navigation', icon: 'Users', url: '/app/employees', keywords: ['staff', 'team'] },
+        { id: 'nav-jobs', title: 'Jobs', category: 'Navigation', icon: 'Briefcase', url: '/app/jobs', keywords: ['positions', 'openings'] },
+        { id: 'nav-analytics', title: 'Analytics', category: 'Navigation', icon: 'BarChart3', url: '/app/analytics', keywords: ['reports', 'metrics'] },
+        { id: 'nav-performance', title: 'Performance', category: 'Navigation', icon: 'TrendingUp', url: '/app/performance', keywords: ['reviews', 'goals'] },
+        { id: 'nav-learning', title: 'Learning', category: 'Navigation', icon: 'Award', url: '/app/learning', keywords: ['training', 'courses'] },
+        { id: 'nav-compensation', title: 'Compensation', category: 'Navigation', icon: 'FileText', url: '/app/compensation', keywords: ['payroll', 'salary'] },
+        { id: 'nav-engagement', title: 'Engagement', category: 'Navigation', icon: 'Heart', url: '/app/engagement', keywords: ['surveys', 'wellness'] },
+        { id: 'nav-offboarding', title: 'Offboarding', category: 'Navigation', icon: 'LogOut', url: '/app/offboarding', keywords: ['exit', 'resignation'] },
+        { id: 'nav-automation', title: 'Automation', category: 'Navigation', icon: 'Settings', url: '/app/automation', keywords: ['workflows', 'ai'] }
     ];
 
     useEffect(() => {

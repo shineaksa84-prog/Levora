@@ -14,13 +14,16 @@ import {
     FileText
 } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function LandingPage() {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const handleLogin = () => navigate('/login');
     const handleSignup = () => navigate('/signup');
+    const handleGoToApp = () => navigate('/app');
 
     return (
         <div className="font-sans text-slate-800 bg-slate-50 min-h-screen selection:bg-indigo-100 selection:text-indigo-900">
@@ -36,10 +39,18 @@ export default function LandingPage() {
                             <a href="#features" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Features</a>
                             <a href="#solutions" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Solutions</a>
                             <a href="#pricing" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Pricing</a>
-                            <button onClick={handleLogin} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Log in</button>
-                            <button onClick={handleSignup} className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors shadow-lg shadow-indigo-500/10">
-                                Start Free
-                            </button>
+                            {user ? (
+                                <button onClick={handleGoToApp} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/10 flex items-center gap-2">
+                                    <Layout className="w-4 h-4" /> Go to Dashboard
+                                </button>
+                            ) : (
+                                <>
+                                    <button onClick={handleLogin} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Log in</button>
+                                    <button onClick={handleSignup} className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors shadow-lg shadow-indigo-500/10">
+                                        Start Free
+                                    </button>
+                                </>
+                            )}
                         </div>
 
                         <div className="md:hidden">
@@ -55,8 +66,14 @@ export default function LandingPage() {
                         <a href="#features" className="block text-sm font-medium text-slate-600">Features</a>
                         <a href="#solutions" className="block text-sm font-medium text-slate-600">Solutions</a>
                         <a href="#pricing" className="block text-sm font-medium text-slate-600">Pricing</a>
-                        <button onClick={handleLogin} className="block w-full text-left text-sm font-medium text-slate-600">Log in</button>
-                        <button onClick={handleSignup} className="block w-full bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium">Start Free</button>
+                        {user ? (
+                            <button onClick={handleGoToApp} className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Go to Dashboard</button>
+                        ) : (
+                            <>
+                                <button onClick={handleLogin} className="block w-full text-left text-sm font-medium text-slate-600">Log in</button>
+                                <button onClick={handleSignup} className="block w-full bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium">Start Free</button>
+                            </>
+                        )}
                     </div>
                 )}
             </nav>
@@ -72,12 +89,20 @@ export default function LandingPage() {
                         Levora is a modern HR platform that brings hiring, people management, payroll, performance, and compliance into one calm, connected system.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-                        <button onClick={handleSignup} className="bg-indigo-600 text-white px-8 py-3.5 rounded-xl text-lg font-semibold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 flex items-center gap-2">
-                            Get started free <ArrowRight className="w-5 h-5" />
-                        </button>
-                        <button className="bg-white text-slate-700 px-8 py-3.5 rounded-xl text-lg font-semibold hover:bg-slate-50 transition-all border border-slate-200 shadow-sm flex items-center gap-2">
-                            Book a 15-minute demo
-                        </button>
+                        {user ? (
+                            <button onClick={handleGoToApp} className="bg-indigo-600 text-white px-8 py-3.5 rounded-xl text-lg font-semibold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 flex items-center gap-2">
+                                Go to Dashboard <ArrowRight className="w-5 h-5" />
+                            </button>
+                        ) : (
+                            <>
+                                <button onClick={handleSignup} className="bg-indigo-600 text-white px-8 py-3.5 rounded-xl text-lg font-semibold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 flex items-center gap-2">
+                                    Get started free <ArrowRight className="w-5 h-5" />
+                                </button>
+                                <button className="bg-white text-slate-700 px-8 py-3.5 rounded-xl text-lg font-semibold hover:bg-slate-50 transition-all border border-slate-200 shadow-sm flex items-center gap-2">
+                                    Book a 15-minute demo
+                                </button>
+                            </>
+                        )}
                     </div>
                     <div className="flex items-center justify-center gap-6 text-sm text-slate-500 font-medium">
                         <span className="flex items-center gap-1.5"><Shield className="w-4 h-4 text-emerald-500" /> Secure by design</span>
