@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Smile, Meh, Frown, Heart, Activity, Calendar } from 'lucide-react';
+import { geminiService } from '../../lib/ai/gemini';
 
 const MOODS = [
     { id: 'great', label: 'Great', icon: Heart, color: 'text-pink-500', bg: 'bg-pink-100' },
@@ -19,13 +20,21 @@ export default function MoodTracker() {
         { date: 'Thu', mood: 'good' },
         { date: 'Fri', mood: null }, // Today
     ]);
+    const [tip, setTip] = useState("Taking regular short breaks improves focus and prevents burnout. Try the Pomodoro technique today!");
 
-    const logMood = () => {
+    const logMood = async () => {
         if (!selectedMood) return;
         const newHistory = [...history];
         newHistory[4].mood = selectedMood.id;
         setHistory(newHistory);
-        // Reset or show success
+
+        // Fetch real AI tip
+        try {
+            const aiTip = await geminiService.generateWellnessTip(selectedMood.label);
+            setTip(aiTip);
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     return (
@@ -98,7 +107,7 @@ export default function MoodTracker() {
 
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800">
                     <p className="font-bold mb-1">Tip of the day</p>
-                    <p>Taking regular short breaks improves focus and prevents burnout. Try the Pomodoro technique today!</p>
+                    <p>{tip}</p>
                 </div>
             </div>
         </div>

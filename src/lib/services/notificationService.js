@@ -1,11 +1,24 @@
 /**
  * Notification Service
- * Handles creating and retrieving notifications for users.
+ * Handles creating and retrieving notifications for users using Firebase Firestore.
  */
 
-import { generateId } from '../utils/helpers';
+import { db } from '../firebase';
+import {
+    collection,
+    addDoc,
+    getDocs,
+    query,
+    where,
+    updateDoc,
+    doc,
+    orderBy,
+    serverTimestamp,
+    limit,
+    onSnapshot
+} from 'firebase/firestore';
 
-const NOTIFICATIONS_KEY = 'user_notifications';
+const NOTIFICATIONS_COLLECTION = 'user_notifications';
 
 /**
  * Add a notification for a user
@@ -14,27 +27,25 @@ const NOTIFICATIONS_KEY = 'user_notifications';
  * @param {string} message - Notification message
  * @param {string} type - Notification type (info, success, warning, error)
  */
-export const addNotification = (userId, title, message, type = 'info') => {
+export const addNotification = async (userId, title, message, type = 'info') => {
     try {
-        const notifications = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
-
         const newNotification = {
-            id: generateId(),
             userId,
             title,
             message,
             type,
             isRead: false,
-            createdAt: new Date().toISOString()
+            createdAt: serverTimestamp()
         };
 
-        notifications.unshift(newNotification);
-        localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
+        const docRef = await addDoc(collection(db, NOTIFICATIONS_COLLECTION), newNotification);
 
-        // Dispatch event for real-time updates if needed
-        window.dispatchEvent(new CustomEvent('notification_added', { detail: newNotification }));
+        const returnData = { id: docRef.id, ...newNotification };
 
-        return newNotification;
+        // Dispatch event for real-time updates if needed (local tab only)
+        window.dispatchEvent(new CustomEvent('notification_added', { detail: returnData }));
+
+        return returnData;
     } catch (error) {
         console.error('Error adding notification:', error);
     }
@@ -44,10 +55,21 @@ export const addNotification = (userId, title, message, type = 'info') => {
  * Get notifications for a specific user
  * @param {string} userId 
  */
-export const getUserNotifications = (userId) => {
+export const getUserNotifications = async (userId) => {
     try {
-        const notifications = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
-        return notifications.filter(n => n.userId === userId);
+        const q = query(
+            collection(db, NOTIFICATIONS_COLLECTION),
+            where('userId', '==', userId),
+            orderBy('createdAt', 'desc')
+        );
+
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            // Convert Firestore timestamp to ISO string for compatibility
+            createdAt: doc.data().createdAt?.toDate()?.toISOString() || new Date().toISOString()
+        }));
     } catch (error) {
         console.error('Error getting notifications:', error);
         return [];
@@ -58,13 +80,10 @@ export const getUserNotifications = (userId) => {
  * Mark a notification as read
  * @param {string} notificationId 
  */
-export const markNotificationAsRead = (notificationId) => {
+export const markNotificationAsRead = async (notificationId) => {
     try {
-        const notifications = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
-        const updatedNotifications = notifications.map(n =>
-            n.id === notificationId ? { ...n, isRead: true } : n
-        );
-        localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(updatedNotifications));
+        const notificationRef = doc(db, NOTIFICATIONS_COLLECTION, notificationId);
+        await updateDoc(notificationRef, { isRead: true });
     } catch (error) {
         console.error('Error marking notification as read:', error);
     }
@@ -74,11 +93,40 @@ export const markNotificationAsRead = (notificationId) => {
  * Get unread count for a user
  * @param {string} userId 
  */
-export const getUnreadCount = (userId) => {
+export const getUnreadCount = async (userId) => {
     try {
-        const notifications = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
-        return notifications.filter(n => n.userId === userId && !n.isRead).length;
+        const q = query(
+            collection(db, NOTIFICATIONS_COLLECTION),
+            where('userId', '==', userId),
+            where('isRead', '==', false)
+        );
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.size;
     } catch (error) {
+        console.error('Error getting unread count:', error);
         return 0;
     }
+};
+
+/**
+ * Listen for new notifications (Real-time)
+ * @param {string} userId 
+ * @param {Function} callback 
+ */
+export const subscribeToNotifications = (userId, callback) => {
+    const q = query(
+        collection(db, NOTIFICATIONS_COLLECTION),
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc'),
+        limit(20)
+    );
+
+    return onSnapshot(q, (snapshot) => {
+        const notifications = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            createdAt: doc.data().createdAt?.toDate()?.toISOString() || new Date().toISOString()
+        }));
+        callback(notifications);
+    });
 };

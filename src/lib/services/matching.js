@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { geminiService } from '../ai/gemini';
 
@@ -135,41 +135,76 @@ class MatchingService {
         }
     }
 
-    // Mock data methods (replace with actual Firestore queries)
+    // Firestore data methods
     async getCandidateProfile(candidateId) {
-        return {
-            id: candidateId,
-            name: "John Doe",
-            skills: ["JavaScript", "React", "Node.js", "Python"],
-            experience: "3 years",
-            education: "B.Tech Computer Science"
-        };
+        try {
+            // First try matching by Firestore Doc ID
+            let docRef = doc(db, 'candidates', candidateId);
+            let snap = await getDoc(docRef);
+
+            if (snap.exists()) {
+                return { id: snap.id, ...snap.data() };
+            }
+
+            // Fallback: Query by internal 'id' field
+            const q = query(collection(db, 'candidates'), where('id', '==', candidateId));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                return { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() };
+            }
+
+            return null;
+        } catch (error) {
+            console.error('Error fetching candidate profile:', error);
+            return null;
+        }
     }
 
     async getJobRequirements(jobId) {
-        return {
-            id: jobId,
-            title: "Senior React Developer",
-            requiredSkills: ["React", "JavaScript", "TypeScript"],
-            preferredSkills: ["Node.js", "AWS"],
-            minExperience: "2 years"
-        };
+        try {
+            // First try matching by Firestore Doc ID
+            let docRef = doc(db, 'jobs', jobId);
+            let snap = await getDoc(docRef);
+
+            if (snap.exists()) {
+                return { id: snap.id, ...snap.data() };
+            }
+
+            // Fallback: Query by internal 'id' field
+            const q = query(collection(db, 'jobs'), where('id', '==', String(jobId)));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                return { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() };
+            }
+
+            return null;
+        } catch (error) {
+            console.error('Error fetching job requirements:', error);
+            return null;
+        }
     }
 
     async getOpenJobs() {
-        return [
-            { id: "job1", title: "Senior React Developer", status: "open" },
-            { id: "job2", title: "Full Stack Engineer", status: "open" },
-            { id: "job3", title: "Python Developer", status: "open" }
-        ];
+        try {
+            const q = query(collection(db, 'jobs'), where('status', '==', 'Open'));
+            const querySnapshot = await getDocs(q);
+            return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            console.error('Error fetching open jobs:', error);
+            return [];
+        }
     }
 
     async getAllCandidates() {
-        return [
-            { id: "cand1", name: "John Doe", status: "active" },
-            { id: "cand2", name: "Jane Smith", status: "active" },
-            { id: "cand3", name: "Mike Johnson", status: "active" }
-        ];
+        try {
+            const querySnapshot = await getDocs(collection(db, 'candidates'));
+            return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            console.error('Error fetching all candidates:', error);
+            return [];
+        }
     }
 }
 

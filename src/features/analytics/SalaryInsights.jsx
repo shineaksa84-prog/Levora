@@ -1,27 +1,32 @@
 import { useState } from 'react';
-import { Search, TrendingUp, DollarSign, MapPin, Briefcase } from 'lucide-react';
+import { Search, TrendingUp, DollarSign, MapPin, Briefcase, Loader2 } from 'lucide-react';
 
 export default function SalaryInsights() {
     const [search, setSearch] = useState({ role: '', location: '' });
     const [result, setResult] = useState(null);
 
-    const handleSearch = () => {
-        // Mock data response based on inputs or default random data
-        const role = search.role || 'Software Engineer';
-        const location = search.location || 'San Francisco, CA';
+    const [loading, setLoading] = useState(false);
 
-        setResult({
-            role,
-            location,
-            currency: 'USD',
-            ranges: {
-                low: 110000,
-                median: 145000,
-                high: 180000
-            },
-            confidence: 92,
-            trend: '+5.4%'
-        });
+    const handleSearch = async () => {
+        if (!search.role || !search.location) return;
+
+        setLoading(true);
+        try {
+            const data = await geminiService.getMarketSalaryData(search.role, search.location);
+            setResult(data);
+        } catch (error) {
+            console.error('Failed to analyze ecosystem:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const formatCurrency = (val) => {
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: result.currency || 'INR',
+            maximumFractionDigits: 0
+        }).format(val);
     };
 
     return (
@@ -55,9 +60,19 @@ export default function SalaryInsights() {
                     </div>
                     <button
                         onClick={handleSearch}
-                        className="bg-primary text-primary-foreground font-medium rounded-md px-4 py-2 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                        disabled={loading || !search.role || !search.location}
+                        className="bg-primary text-primary-foreground font-medium rounded-md px-4 py-2 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                     >
-                        <Search className="w-4 h-4" /> Analyze Ecosystem
+                        {loading ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Analyzing...
+                            </>
+                        ) : (
+                            <>
+                                <Search className="w-4 h-4" /> Analyze Ecosystem
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
@@ -87,15 +102,15 @@ export default function SalaryInsights() {
                         <div className="relative pt-8 pb-4">
                             <div className="flex justify-between items-end mb-4 text-sm font-medium text-muted-foreground px-4">
                                 <div className="text-center">
-                                    <p className="text-gray-900 text-lg font-bold">${result.ranges.low.toLocaleString()}</p>
+                                    <p className="text-gray-900 text-lg font-bold">{formatCurrency(result.ranges.low)}</p>
                                     <p>Low</p>
                                 </div>
                                 <div className="text-center scale-110 origin-bottom">
-                                    <p className="text-primary text-2xl font-extrabold">${result.ranges.median.toLocaleString()}</p>
+                                    <p className="text-primary text-2xl font-extrabold">{formatCurrency(result.ranges.median)}</p>
                                     <p className="text-primary">Median</p>
                                 </div>
                                 <div className="text-center">
-                                    <p className="text-gray-900 text-lg font-bold">${result.ranges.high.toLocaleString()}</p>
+                                    <p className="text-gray-900 text-lg font-bold">{formatCurrency(result.ranges.high)}</p>
                                     <p>High</p>
                                 </div>
                             </div>
@@ -119,7 +134,7 @@ export default function SalaryInsights() {
                             <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
                                 <h4 className="font-semibold text-blue-900 mb-2">Compensation Strategy</h4>
                                 <p className="text-sm text-blue-800">
-                                    For a {result.role} in this market, offering <strong>${Math.round(result.ranges.median * 1.05).toLocaleString()}</strong> (+5%) significantly increases offer acceptance probability.
+                                    For a {result.role} in this market, offering <strong>{formatCurrency(Math.round(result.ranges.median * 1.05))}</strong> (+5%) significantly increases offer acceptance probability.
                                 </p>
                             </div>
                             <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
@@ -128,9 +143,9 @@ export default function SalaryInsights() {
                                     <div className="flex-1 h-2 bg-purple-200 rounded-full overflow-hidden">
                                         <div className="h-full w-[85%] bg-purple-600 rounded-full"></div>
                                     </div>
-                                    <span className="text-sm font-bold text-purple-700">Very High</span>
+                                    <span className="text-sm font-bold text-purple-700">{result.demandIndex || 'Very High'}</span>
                                 </div>
-                                <p className="text-xs text-purple-800 mt-2">Time to fill is averaging 42 days.</p>
+                                <p className="text-xs text-purple-800 mt-2">Time to fill is averaging {result.timeToFillAvg || 42} days.</p>
                             </div>
                         </div>
                     </div>

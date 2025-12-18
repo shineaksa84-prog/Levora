@@ -9,35 +9,24 @@ import {
     ChevronRight,
     Plus
 } from 'lucide-react';
-import { approveResignation, getOffboardingChecklist, updateChecklistTask } from '../../lib/services/resignationService';
+import { approveResignation, getOffboardingChecklist, updateChecklistTask, getResignations } from '../../lib/services/resignationService';
 import OffboardingChecklist from './OffboardingChecklist';
 
 export default function Resignation() {
-    const [resignations, setResignations] = useState([
-        {
-            id: 1,
-            employee: "David Kim",
-            role: "Senior Developer",
-            date: "2024-11-28",
-            lastDay: "2024-12-28",
-            reason: "Better Opportunity",
-            status: "Pending",
-            avatar: "DK"
-        },
-        {
-            id: 2,
-            employee: "Lisa Wang",
-            role: "Product Designer",
-            date: "2024-11-15",
-            lastDay: "2024-12-15",
-            reason: "Relocation",
-            status: "Approved",
-            avatar: "LW"
-        }
-    ]);
+    const [resignations, setResignations] = useState([]);
     const [selectedResignation, setSelectedResignation] = useState(null);
     const [checklist, setChecklist] = useState(null);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchResignations = async () => {
+            setLoading(true);
+            const data = await getResignations();
+            setResignations(data);
+            setLoading(false);
+        };
+        fetchResignations();
+    }, []);
 
     const handleApprove = async (resignationId) => {
         setLoading(true);
@@ -61,18 +50,30 @@ export default function Resignation() {
     };
 
     const handleViewChecklist = async (resignationId) => {
-        const existingChecklist = getOffboardingChecklist(resignationId);
-        if (existingChecklist) {
-            setChecklist(existingChecklist);
-            setSelectedResignation(resignations.find(r => r.id === resignationId));
+        setLoading(true);
+        try {
+            const existingChecklist = await getOffboardingChecklist(resignationId);
+            if (existingChecklist) {
+                setChecklist(existingChecklist);
+                setSelectedResignation(resignations.find(r => r.id === resignationId));
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleTaskUpdate = (checklistId, taskId, status) => {
-        updateChecklistTask(checklistId, taskId, status);
-        // Refresh checklist
-        const updatedChecklist = getOffboardingChecklist(selectedResignation.id);
-        setChecklist(updatedChecklist);
+    const handleTaskUpdate = async (checklistId, taskId, status) => {
+        try {
+            await updateChecklistTask(checklistId, taskId, status);
+            // Refresh checklist from server to be sure, or just update local state if we trust it.
+            // Let's refetch to be safe since we edited a subfield
+            const updatedChecklist = await getOffboardingChecklist(selectedResignation.id);
+            setChecklist(updatedChecklist);
+        } catch (error) {
+            console.error('Failed to update task', error);
+        }
     };
 
     const handleCloseChecklist = () => {

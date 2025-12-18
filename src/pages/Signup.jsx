@@ -1,25 +1,17 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
+import { Mail, Lock, User, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 
-export default function Login() {
+export default function Signup() {
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const { login, user } = useAuth();
+    const { signup } = useAuth();
     const navigate = useNavigate();
-    const location = useLocation();
-
-    const from = location.state?.from?.pathname || '/app';
-
-    useEffect(() => {
-        if (user) {
-            navigate(from, { replace: true });
-        }
-    }, [user, navigate, from]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -27,16 +19,17 @@ export default function Login() {
         setLoading(true);
 
         try {
-            await login(email, password);
-            navigate(from, { replace: true });
+            // Default role is 'admin' for new sign-ups (assuming they are workspace creators)
+            await signup(email, password, 'admin', { displayName: name });
+            navigate('/app');
         } catch (err) {
-            console.error('Login error:', err);
-            if (err.code === 'auth/invalid-credential') {
-                setError('Invalid email or password');
-            } else if (err.code === 'auth/too-many-requests') {
-                setError('Too many failed attempts. Please try again later.');
+            console.error('Signup error:', err);
+            if (err.code === 'auth/email-already-in-use') {
+                setError('Email is already registered.');
+            } else if (err.code === 'auth/weak-password') {
+                setError('Password should be at least 6 characters.');
             } else {
-                setError('Failed to log in. Please check your connection.');
+                setError('Failed to create account. Please try again.');
             }
         } finally {
             setLoading(false);
@@ -50,8 +43,8 @@ export default function Login() {
                     <div className="inline-flex justify-center items-center mb-6">
                         <img src="/levora-logo.jpg" alt="Levora" className="h-20 w-auto rounded-xl shadow-lg" />
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-                    <p className="text-white/70">Sign in to access your HRIMS dashboard</p>
+                    <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
+                    <p className="text-white/70">Join Levora and transform your team.</p>
                 </div>
 
                 {error && (
@@ -61,7 +54,22 @@ export default function Login() {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-white/90 ml-1">Full Name</label>
+                        <div className="relative group">
+                            <User className="w-5 h-5 text-white/50 absolute left-3 top-1/2 -translate-y-1/2 transition-colors group-focus-within:text-white" />
+                            <input
+                                type="text"
+                                required
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="w-full bg-white/10 border border-white/10 rounded-xl px-10 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition-all hover:bg-white/20"
+                                placeholder="John Doe"
+                            />
+                        </div>
+                    </div>
+
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-white/90 ml-1">Email Address</label>
                         <div className="relative group">
@@ -71,7 +79,7 @@ export default function Login() {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full bg-white/10 border border-white/10 rounded-xl px-10 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-transparent transition-all hover:bg-white/20"
+                                className="w-full bg-white/10 border border-white/10 rounded-xl px-10 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition-all hover:bg-white/20"
                                 placeholder="name@company.com"
                             />
                         </div>
@@ -86,7 +94,7 @@ export default function Login() {
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-white/10 border border-white/10 rounded-xl px-10 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-transparent transition-all hover:bg-white/20"
+                                className="w-full bg-white/10 border border-white/10 rounded-xl px-10 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition-all hover:bg-white/20"
                                 placeholder="••••••••"
                             />
                         </div>
@@ -95,21 +103,23 @@ export default function Login() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-white text-slate-900 rounded-xl py-3.5 font-bold text-lg hover:bg-indigo-50 hover:shadow-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 transform active:scale-95"
+                        className="w-full bg-white text-slate-900 rounded-xl py-3.5 font-bold text-lg hover:bg-indigo-50 hover:shadow-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 transform active:scale-95 mt-4"
                     >
                         {loading ? (
                             <>
                                 <Loader2 className="w-5 h-5 animate-spin" />
-                                Signing In...
+                                Creating Account...
                             </>
                         ) : (
-                            'Sign In'
+                            <>
+                                Get Started <ArrowRight className="w-5 h-5" />
+                            </>
                         )}
                     </button>
 
-                    <div className="text-center">
+                    <div className="text-center pt-2">
                         <p className="text-white/60 text-sm">
-                            Don't have an account? <Link to="/signup" className="text-white font-medium hover:underline cursor-pointer">Create Account</Link>
+                            Already have an account? <Link to="/login" className="text-white font-medium hover:underline">Sign In</Link>
                         </p>
                     </div>
                 </form>

@@ -25,12 +25,10 @@ export default function BankDetailsValidator({ onValidated }) {
         setLoading(true);
 
         // Fetch bank details
-        const details = await indianComplianceService.getBankFromIFSC(ifscCode.toUpperCase());
-
-        setTimeout(() => {
+        try {
+            const details = await indianComplianceService.getBankFromIFSC(ifscCode.toUpperCase());
             setBankDetails(details);
             setValidation({ valid: true });
-            setLoading(false);
 
             if (onValidated) {
                 onValidated({
@@ -39,7 +37,11 @@ export default function BankDetailsValidator({ onValidated }) {
                     bankDetails: details
                 });
             }
-        }, 1000);
+        } catch (error) {
+            setValidation({ valid: false, error: 'Failed to fetch bank details' });
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

@@ -3,15 +3,30 @@ import { Users, TrendingUp, TrendingDown } from 'lucide-react';
 import { getRecruitmentFunnel } from '../../lib/services/analyticsService';
 
 export default function RecruitmentFunnel() {
-    const [funnelData, setFunnelData] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const data = getRecruitmentFunnel();
-        setFunnelData(data);
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const data = await getRecruitmentFunnel();
+                setFunnelData(data);
+            } catch (error) {
+                console.error('Failed to load funnel:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
     }, []);
 
-    if (!funnelData) {
-        return <div className="text-center py-8">Loading analytics...</div>;
+    if (loading || !funnelData) {
+        return (
+            <div className="bg-card border border-border rounded-xl p-6 flex flex-col items-center justify-center min-h-[400px]">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+                <p className="text-muted-foreground text-sm">Loading recruitment intelligence...</p>
+            </div>
+        );
     }
 
     const stages = [

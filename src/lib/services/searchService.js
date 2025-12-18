@@ -1,90 +1,94 @@
 /**
  * Unified Search Service
- * Provides global search across all entities in the HRIMS system
+ * Provides global search across all entities in the HRIMS system using Firebase Firestore
  */
+
+import { db } from '../firebase';
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 
 /**
  * Search across all entities
  */
-export const globalSearch = (query) => {
-    if (!query || query.trim().length < 2) {
+export const globalSearch = async (queryText) => {
+    if (!queryText || queryText.trim().length < 2) {
         return [];
     }
 
-    const searchTerm = query.toLowerCase().trim();
+    const searchTerm = queryText.toLowerCase().trim();
     const results = [];
 
-    // Search Employees
-    const employees = JSON.parse(localStorage.getItem('employees') || '[]');
-    const employeeResults = employees
-        .filter(emp =>
-            emp.firstName?.toLowerCase().includes(searchTerm) ||
-            emp.lastName?.toLowerCase().includes(searchTerm) ||
-            emp.employeeId?.toLowerCase().includes(searchTerm) ||
-            emp.email?.toLowerCase().includes(searchTerm) ||
-            emp.department?.toLowerCase().includes(searchTerm) ||
-            emp.position?.toLowerCase().includes(searchTerm)
-        )
-        .map(emp => ({
-            id: emp.id,
-            type: 'employee',
-            title: `${emp.firstName} ${emp.lastName}`,
-            subtitle: `${emp.position} • ${emp.department}`,
-            metadata: emp.employeeId,
-            url: `/employees/${emp.id}`,
-            icon: 'User'
-        }));
+    try {
+        // 1. Search Employees
+        const employeeSnapshot = await getDocs(collection(db, 'employees'));
+        const employeeResults = employeeSnapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(emp =>
+                emp.firstName?.toLowerCase().includes(searchTerm) ||
+                emp.lastName?.toLowerCase().includes(searchTerm) ||
+                emp.employeeId?.toLowerCase().includes(searchTerm) ||
+                emp.email?.toLowerCase().includes(searchTerm) ||
+                emp.department?.toLowerCase().includes(searchTerm) ||
+                emp.position?.toLowerCase().includes(searchTerm)
+            )
+            .map(emp => ({
+                id: emp.id,
+                type: 'employee',
+                title: `${emp.firstName} ${emp.lastName}`,
+                subtitle: `${emp.position} • ${emp.department}`,
+                metadata: emp.employeeId,
+                url: `/employees/${emp.id}`,
+                icon: 'User'
+            }));
 
-    results.push(...employeeResults);
+        results.push(...employeeResults);
 
-    // Search Candidates
-    const candidates = JSON.parse(localStorage.getItem('candidates') || '[]');
-    const candidateResults = candidates
-        .filter(candidate =>
-            candidate.name?.toLowerCase().includes(searchTerm) ||
-            candidate.email?.toLowerCase().includes(searchTerm) ||
-            candidate.role?.toLowerCase().includes(searchTerm) ||
-            candidate.stage?.toLowerCase().includes(searchTerm) ||
-            candidate.location?.toLowerCase().includes(searchTerm)
-        )
-        .map(candidate => ({
-            id: candidate.id,
-            type: 'candidate',
-            title: candidate.name,
-            subtitle: `${candidate.role} • ${candidate.stage}`,
-            metadata: candidate.location,
-            url: `/candidates/${candidate.id}`,
-            icon: 'UserPlus'
-        }));
+        // 2. Search Candidates
+        const candidateSnapshot = await getDocs(collection(db, 'candidates'));
+        const candidateResults = candidateSnapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(candidate =>
+                candidate.name?.toLowerCase().includes(searchTerm) ||
+                candidate.email?.toLowerCase().includes(searchTerm) ||
+                candidate.role?.toLowerCase().includes(searchTerm) ||
+                candidate.stage?.toLowerCase().includes(searchTerm) ||
+                candidate.location?.toLowerCase().includes(searchTerm)
+            )
+            .map(candidate => ({
+                id: candidate.id,
+                type: 'candidate',
+                title: candidate.name,
+                subtitle: `${candidate.role} • ${candidate.stage}`,
+                metadata: candidate.location,
+                url: `/candidates/${candidate.id}`,
+                icon: 'UserPlus'
+            }));
 
-    results.push(...candidateResults);
+        results.push(...candidateResults);
 
-    // Search Jobs
-    const jobs = [
-        { id: 1, title: 'Senior React Developer', department: 'Engineering', location: 'Remote', status: 'Open' },
-        { id: 2, title: 'Product Manager', department: 'Product', location: 'New York', status: 'Open' },
-        { id: 3, title: 'UX Designer', department: 'Design', location: 'San Francisco', status: 'Open' },
-        { id: 4, title: 'Backend Engineer', department: 'Engineering', location: 'Remote', status: 'Open' },
-        { id: 5, title: 'Data Scientist', department: 'Analytics', location: 'Austin', status: 'Open' }
-    ];
+        // 3. Search Jobs
+        const jobSnapshot = await getDocs(collection(db, 'jobs'));
+        const jobResults = jobSnapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(job =>
+                job.title?.toLowerCase().includes(searchTerm) ||
+                job.department?.toLowerCase().includes(searchTerm) ||
+                job.location?.toLowerCase().includes(searchTerm)
+            )
+            .map(job => ({
+                id: job.id,
+                type: 'job',
+                title: job.title,
+                subtitle: `${job.department} • ${job.location}`,
+                metadata: job.status,
+                url: `/jobs/${job.id}`,
+                icon: 'Briefcase'
+            }));
 
-    const jobResults = jobs
-        .filter(job =>
-            job.title?.toLowerCase().includes(searchTerm) ||
-            job.department?.toLowerCase().includes(searchTerm) ||
-            job.location?.toLowerCase().includes(searchTerm)
-        )
-        .map(job => ({
-            id: job.id,
-            type: 'job',
-            title: job.title,
-            subtitle: `${job.department} • ${job.location}`,
-            metadata: job.status,
-            url: `/jobs/${job.id}`,
-            icon: 'Briefcase'
-        }));
+        results.push(...jobResults);
 
-    results.push(...jobResults);
+    } catch (error) {
+        console.error('Error during global search:', error);
+    }
 
     return results;
 };
@@ -92,20 +96,20 @@ export const globalSearch = (query) => {
 /**
  * Search by entity type
  */
-export const searchByType = (query, type) => {
-    const allResults = globalSearch(query);
+export const searchByType = async (queryText, type) => {
+    const allResults = await globalSearch(queryText);
     return allResults.filter(result => result.type === type);
 };
 
 /**
  * Get search suggestions based on partial query
  */
-export const getSearchSuggestions = (query) => {
-    if (!query || query.trim().length < 2) {
+export const getSearchSuggestions = async (queryText) => {
+    if (!queryText || queryText.trim().length < 2) {
         return [];
     }
 
-    const results = globalSearch(query);
+    const results = await globalSearch(queryText);
 
     // Group by type and limit to 3 per type
     const grouped = results.reduce((acc, result) => {
@@ -124,9 +128,9 @@ export const getSearchSuggestions = (query) => {
 /**
  * Track recent searches
  */
-export const addToRecentSearches = (query) => {
+export const addToRecentSearches = (queryText) => {
     const recent = JSON.parse(localStorage.getItem('recentSearches') || '[]');
-    const updated = [query, ...recent.filter(q => q !== query)].slice(0, 10);
+    const updated = [queryText, ...recent.filter(q => q !== queryText)].slice(0, 10);
     localStorage.setItem('recentSearches', JSON.stringify(updated));
 };
 

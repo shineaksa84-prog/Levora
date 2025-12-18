@@ -1,54 +1,61 @@
-import { useState } from 'react';
-import { Workflow, Plus, Play, Trash2, Edit, Sparkles, Zap } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Workflow, Plus, Play, Trash2, Edit, Sparkles, Zap, Loader2 } from 'lucide-react';
 import { workflowService } from '../../lib/services/workflow';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function WorkflowBuilder() {
-    const [workflows, setWorkflows] = useState([
-        {
-            id: 1,
-            name: "Auto-Schedule Shortlisted Candidates",
-            description: "When candidate status = shortlisted → send email → schedule interview",
-            trigger: "Status Change",
-            actions: 3,
-            status: "active",
-            executionCount: 24
-        },
-        {
-            id: 2,
-            name: "Notify Recruiter on New Application",
-            description: "When new candidate applies → notify recruiter → add to pipeline",
-            trigger: "New Candidate",
-            actions: 2,
-            status: "active",
-            executionCount: 156
-        }
-    ]);
+    const { user } = useAuth();
+    const [workflows, setWorkflows] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [naturalLanguageInput, setNaturalLanguageInput] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
+
+    useEffect(() => {
+        const fetchWorkflows = async () => {
+            setLoading(true);
+            try {
+                const result = await workflowService.getWorkflows(user?.uid);
+                if (result.success) {
+                    setWorkflows(result.workflows);
+                }
+            } catch (error) {
+                console.error('Error fetching workflows:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchWorkflows();
+    }, [user?.uid]);
 
     const handleGenerateWorkflow = async () => {
         if (!naturalLanguageInput.trim()) return;
 
         setIsGenerating(true);
-
-        // Simulate AI generation
-        setTimeout(() => {
-            const newWorkflow = {
-                id: workflows.length + 1,
-                name: "AI Generated Workflow",
-                description: naturalLanguageInput,
-                trigger: "Auto-detected",
-                actions: 3,
-                status: "draft",
-                executionCount: 0
-            };
-
-            setWorkflows([...workflows, newWorkflow]);
-            setNaturalLanguageInput('');
+        try {
+            const result = await workflowService.createWorkflowFromText(naturalLanguageInput, user?.uid);
+            if (result.success) {
+                setWorkflows(prev => [result.workflow, ...prev]);
+                setNaturalLanguageInput('');
+                setShowCreateModal(false);
+            }
+        } catch (error) {
+            console.error('Workflow generation failed:', error);
+        } finally {
             setIsGenerating(false);
-            setShowCreateModal(false);
-        }, 2000);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm('Delete this workflow?')) return;
+        try {
+            const result = await workflowService.deleteWorkflow(id);
+            if (result.success) {
+                setWorkflows(prev => prev.filter(w => w.id !== id));
+            }
+        } catch (error) {
+            console.error('Delete failed:', error);
+        }
     };
 
     return (
@@ -113,49 +120,76 @@ export default function WorkflowBuilder() {
 
             {/* Workflows List */}
             <div className="grid gap-4">
-                {workflows.map((workflow) => (
-                    <div key={workflow.id} className="bg-card rounded-xl border border-border p-6 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <h3 className="text-lg font-semibold">{workflow.name}</h3>
-                                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${workflow.status === 'active'
-                                            ? 'bg-green-100 text-green-700 border-green-200'
-                                            : 'bg-gray-100 text-gray-700 border-gray-200'
-                                        }`}>
-                                        {workflow.status}
-                                    </span>
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center py-20 bg-card rounded-xl border border-dashed border-border">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
+                        <p className="text-sm text-muted-foreground">Loading your automations...</p>
+                    </div>
+                ) : workflows.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 bg-card rounded-xl border border-dashed border-border text-center px-4">
+                        <Workflow className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                        <h3 className="font-semibold text-lg">No workflows yet</h3>
+                        <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+                            Describe an automation above or use a template to get started with AI-powered recruiting.
+                        </p>
+                    </div>
+                ) : (
+                    workflows.map((workflow) => (
+                        <div key={workflow.id} className="bg-card rounded-xl border border-border p-6 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <h3 className="text-lg font-semibold">{workflow.name}</h3>
+                                        <button
+                                            onClick={async () => {
+                                                const newStatus = workflow.status === 'active' ? 'draft' : 'active';
+                                                try {
+                                                    await workflowService.updateWorkflow(workflow.id, { status: newStatus });
+                                                    setWorkflows(prev => prev.map(w => w.id === workflow.id ? { ...w, status: newStatus } : w));
+                                                } catch (e) { console.error(e); }
+                                            }}
+                                            className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${workflow.status === 'active'
+                                                ? 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200'
+                                                : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
+                                                }`}
+                                        >
+                                            {workflow.status}
+                                        </button>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground mb-4">{workflow.description}</p>
+                                    <div className="flex items-center gap-6 text-sm">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-muted-foreground">Trigger:</span>
+                                            <span className="font-medium">{workflow.trigger}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-muted-foreground">Actions:</span>
+                                            <span className="font-medium">{workflow.actions?.length || workflow.actions || 0}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-muted-foreground">Executions:</span>
+                                            <span className="font-medium">{workflow.executionCount}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <p className="text-sm text-muted-foreground mb-4">{workflow.description}</p>
-                                <div className="flex items-center gap-6 text-sm">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-muted-foreground">Trigger:</span>
-                                        <span className="font-medium">{workflow.trigger}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-muted-foreground">Actions:</span>
-                                        <span className="font-medium">{workflow.actions}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-muted-foreground">Executions:</span>
-                                        <span className="font-medium">{workflow.executionCount}</span>
-                                    </div>
+                                <div className="flex items-center gap-2">
+                                    <button className="p-2 hover:bg-accent rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+                                        <Play className="w-5 h-5" />
+                                    </button>
+                                    <button className="p-2 hover:bg-accent rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+                                        <Edit className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(workflow.id)}
+                                        className="p-2 hover:bg-accent rounded-lg text-red-500 hover:text-red-600 transition-colors"
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button className="p-2 hover:bg-accent rounded-lg text-muted-foreground hover:text-foreground transition-colors">
-                                    <Play className="w-5 h-5" />
-                                </button>
-                                <button className="p-2 hover:bg-accent rounded-lg text-muted-foreground hover:text-foreground transition-colors">
-                                    <Edit className="w-5 h-5" />
-                                </button>
-                                <button className="p-2 hover:bg-accent rounded-lg text-red-500 hover:text-red-600 transition-colors">
-                                    <Trash2 className="w-5 h-5" />
-                                </button>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
 
             {/* Quick Templates */}

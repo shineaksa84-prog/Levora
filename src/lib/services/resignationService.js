@@ -3,17 +3,43 @@
  * Handles resignation workflow and auto-generates offboarding checklists
  */
 
-import { generateId } from '../utils/helpers';
+import {
+    collection,
+    addDoc,
+    updateDoc,
+    doc,
+    getDocs,
+    query,
+    where,
+    orderBy,
+    getDoc,
+    serverTimestamp
+} from 'firebase/firestore';
+import { db } from '../firebase/config';
+
+const RESIGNATIONS_COLLECTION = 'resignations';
+const CHECKLISTS_COLLECTION = 'offboarding_checklists';
+
+/**
+ * Get all resignations
+ */
+export const getResignations = async () => {
+    try {
+        const q = query(collection(db, RESIGNATIONS_COLLECTION), orderBy('submittedAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error('Error fetching resignations:', error);
+        return [];
+    }
+};
 
 /**
  * Submit a resignation request
- * @param {Object} resignationData - Resignation details
- * @returns {Object} - Created resignation with offboarding checklist
  */
 export const submitResignation = async (resignationData) => {
     try {
         const resignation = {
-            id: generateId(),
             employeeId: resignationData.employeeId,
             employee: resignationData.employee,
             role: resignationData.role,
@@ -23,15 +49,12 @@ export const submitResignation = async (resignationData) => {
             reason: resignationData.reason,
             reasonDetails: resignationData.reasonDetails || '',
             status: 'Pending',
-            submittedAt: new Date().toISOString()
+            submittedAt: new Date().toISOString(),
+            createdAt: serverTimestamp()
         };
 
-        // Store resignation
-        const resignations = JSON.parse(localStorage.getItem('resignations') || '[]');
-        resignations.push(resignation);
-        localStorage.setItem('resignations', JSON.stringify(resignations));
-
-        return resignation;
+        const docRef = await addDoc(collection(db, RESIGNATIONS_COLLECTION), resignation);
+        return { id: docRef.id, ...resignation };
     } catch (error) {
         console.error('Error submitting resignation:', error);
         throw error;
@@ -43,23 +66,25 @@ export const submitResignation = async (resignationData) => {
  */
 export const approveResignation = async (resignationId) => {
     try {
-        // Update resignation status
-        const resignations = JSON.parse(localStorage.getItem('resignations') || '[]');
-        const resignation = resignations.find(r => r.id === resignationId);
+        // 1. Update resignation status
+        const resignationRef = doc(db, RESIGNATIONS_COLLECTION, resignationId);
+        const resignationSnap = await getDoc(resignationRef);
 
-        if (!resignation) {
+        if (!resignationSnap.exists()) {
             throw new Error('Resignation not found');
         }
 
-        resignation.status = 'Approved';
-        resignation.approvedAt = new Date().toISOString();
+        const resignationData = { id: resignationSnap.id, ...resignationSnap.data() };
 
-        localStorage.setItem('resignations', JSON.stringify(resignations));
+        await updateDoc(resignationRef, {
+            status: 'Approved',
+            approvedAt: new Date().toISOString()
+        });
 
-        // Auto-generate offboarding checklist
-        const checklist = await generateOffboardingChecklist(resignation);
+        // 2. Generate offboarding checklist
+        const checklist = await generateOffboardingChecklist(resignationData);
 
-        return { resignation, checklist };
+        return { resignation: { ...resignationData, status: 'Approved' }, checklist };
     } catch (error) {
         console.error('Error approving resignation:', error);
         throw error;
@@ -67,29 +92,27 @@ export const approveResignation = async (resignationId) => {
 };
 
 /**
- * Generate comprehensive offboarding checklist
+ * Generate comprehensive offboarding checklist in Firestore
  */
 export const generateOffboardingChecklist = async (resignation) => {
+    const tasks = generateOffboardingTasks(resignation);
+
     const checklist = {
-        id: generateId(),
         resignationId: resignation.id,
         employeeId: resignation.employeeId,
         employee: resignation.employee,
         lastDay: resignation.lastDay,
         status: 'In Progress',
         createdAt: new Date().toISOString(),
-        tasks: generateOffboardingTasks(resignation)
+        tasks: tasks
     };
 
-    // Store checklist
-    const checklists = JSON.parse(localStorage.getItem('offboardingChecklists') || '[]');
-    checklists.push(checklist);
-    localStorage.setItem('offboardingChecklists', JSON.stringify(checklists));
+    const docRef = await addDoc(collection(db, CHECKLISTS_COLLECTION), checklist);
 
-    // Update employee status
-    updateEmployeeStatus(resignation.employeeId, 'Notice Period');
+    // Ideally update user status here too via cloud function or separate call
+    // updateEmployeeStatus(resignation.employeeId, 'Notice Period'); 
 
-    return checklist;
+    return { id: docRef.id, ...checklist };
 };
 
 /**
@@ -98,19 +121,18 @@ export const generateOffboardingChecklist = async (resignation) => {
 const generateOffboardingTasks = (resignation) => {
     const lastDay = new Date(resignation.lastDay);
     const today = new Date();
-    const daysRemaining = Math.ceil((lastDay - today) / (1000 * 60 * 60 * 24));
 
-    // Calculate task deadlines
+    // Helper to format date
     const getDeadline = (daysBeforeLastDay) => {
         const deadline = new Date(lastDay);
         deadline.setDate(deadline.getDate() - daysBeforeLastDay);
         return deadline.toISOString().split('T')[0];
     };
 
-    const tasks = [
+    return [
         // HR Tasks
         {
-            id: 1,
+            id: 'hr-1',
             category: 'HR',
             title: 'Schedule exit interview',
             description: 'Conduct exit interview to gather feedback',
@@ -120,7 +142,7 @@ const generateOffboardingTasks = (resignation) => {
             priority: 'high'
         },
         {
-            id: 2,
+            id: 'hr-2',
             category: 'HR',
             title: 'Process final settlement',
             description: 'Calculate and process final salary, leave encashment, and benefits',
@@ -129,20 +151,9 @@ const generateOffboardingTasks = (resignation) => {
             status: 'pending',
             priority: 'high'
         },
-        {
-            id: 3,
-            category: 'HR',
-            title: 'Issue relieving letter',
-            description: 'Prepare and issue relieving letter and experience certificate',
-            assignedTo: 'HR Team',
-            deadline: resignation.lastDay,
-            status: 'pending',
-            priority: 'high'
-        },
-
         // IT Tasks
         {
-            id: 4,
+            id: 'it-1',
             category: 'IT',
             title: 'Revoke system access',
             description: 'Disable all system accounts and email access',
@@ -152,7 +163,7 @@ const generateOffboardingTasks = (resignation) => {
             priority: 'critical'
         },
         {
-            id: 5,
+            id: 'it-2',
             category: 'IT',
             title: 'Collect company assets',
             description: 'Retrieve laptop, phone, access cards, and other company property',
@@ -161,20 +172,9 @@ const generateOffboardingTasks = (resignation) => {
             status: 'pending',
             priority: 'high'
         },
-        {
-            id: 6,
-            category: 'IT',
-            title: 'Data backup and transfer',
-            description: 'Backup employee data and transfer to team',
-            assignedTo: 'IT Team',
-            deadline: getDeadline(3),
-            status: 'pending',
-            priority: 'medium'
-        },
-
         // Manager Tasks
         {
-            id: 7,
+            id: 'mgr-1',
             category: 'Manager',
             title: 'Knowledge transfer',
             description: 'Ensure complete handover of responsibilities and ongoing projects',
@@ -182,128 +182,84 @@ const generateOffboardingTasks = (resignation) => {
             deadline: getDeadline(7),
             status: 'pending',
             priority: 'critical'
-        },
-        {
-            id: 8,
-            category: 'Manager',
-            title: 'Update team structure',
-            description: 'Redistribute responsibilities and update team hierarchy',
-            assignedTo: 'Reporting Manager',
-            deadline: getDeadline(5),
-            status: 'pending',
-            priority: 'medium'
-        },
-
-        // Finance Tasks
-        {
-            id: 9,
-            category: 'Finance',
-            title: 'Clear pending expenses',
-            description: 'Process and clear all pending expense claims',
-            assignedTo: 'Finance Team',
-            deadline: getDeadline(3),
-            status: 'pending',
-            priority: 'medium'
-        },
-        {
-            id: 10,
-            category: 'Finance',
-            title: 'Update payroll',
-            description: 'Remove from payroll system and update records',
-            assignedTo: 'Finance Team',
-            deadline: resignation.lastDay,
-            status: 'pending',
-            priority: 'high'
-        },
-
-        // Admin Tasks
-        {
-            id: 11,
-            category: 'Admin',
-            title: 'Update organizational chart',
-            description: 'Remove from org chart and update directory',
-            assignedTo: 'Admin Team',
-            deadline: resignation.lastDay,
-            status: 'pending',
-            priority: 'low'
-        },
-        {
-            id: 12,
-            category: 'Admin',
-            title: 'Deactivate building access',
-            description: 'Revoke physical access to office premises',
-            assignedTo: 'Admin Team',
-            deadline: resignation.lastDay,
-            status: 'pending',
-            priority: 'high'
         }
     ];
-
-    return tasks;
-};
-
-/**
- * Update employee status
- */
-const updateEmployeeStatus = (employeeId, status) => {
-    const employees = JSON.parse(localStorage.getItem('employees') || '[]');
-    const updatedEmployees = employees.map(emp =>
-        emp.id === employeeId || emp.employeeId === employeeId
-            ? { ...emp, status, offboardingStarted: new Date().toISOString() }
-            : emp
-    );
-    localStorage.setItem('employees', JSON.stringify(updatedEmployees));
 };
 
 /**
  * Update checklist task status
  */
-export const updateChecklistTask = (checklistId, taskId, status) => {
-    const checklists = JSON.parse(localStorage.getItem('offboardingChecklists') || '[]');
-    const updatedChecklists = checklists.map(checklist => {
-        if (checklist.id === checklistId) {
-            const updatedTasks = checklist.tasks.map(task =>
-                task.id === taskId ? { ...task, status, completedAt: status === 'completed' ? new Date().toISOString() : null } : task
-            );
+export const updateChecklistTask = async (checklistId, taskId, status) => {
+    try {
+        const checklistRef = doc(db, CHECKLISTS_COLLECTION, checklistId);
+        const checklistSnap = await getDoc(checklistRef);
 
-            // Update overall checklist status
-            const allCompleted = updatedTasks.every(task => task.status === 'completed');
-            const checklistStatus = allCompleted ? 'Completed' : 'In Progress';
+        if (!checklistSnap.exists()) throw new Error('Checklist not found');
 
-            return { ...checklist, tasks: updatedTasks, status: checklistStatus };
-        }
-        return checklist;
-    });
+        const data = checklistSnap.data();
+        const updatedTasks = data.tasks.map(task =>
+            task.id === taskId
+                ? { ...task, status, completedAt: status === 'completed' ? new Date().toISOString() : null }
+                : task
+        );
 
-    localStorage.setItem('offboardingChecklists', JSON.stringify(updatedChecklists));
+        const allCompleted = updatedTasks.every(task => task.status === 'completed');
+        const checklistStatus = allCompleted ? 'Completed' : 'In Progress';
+
+        await updateDoc(checklistRef, {
+            tasks: updatedTasks,
+            status: checklistStatus
+        });
+
+        return { ...data, tasks: updatedTasks, status: checklistStatus };
+    } catch (error) {
+        console.error('Error updating task:', error);
+        throw error;
+    }
 };
 
 /**
  * Get offboarding checklist by resignation ID
  */
-export const getOffboardingChecklist = (resignationId) => {
-    const checklists = JSON.parse(localStorage.getItem('offboardingChecklists') || '[]');
-    return checklists.find(c => c.resignationId === resignationId);
+export const getOffboardingChecklist = async (resignationId) => {
+    try {
+        const q = query(collection(db, CHECKLISTS_COLLECTION), where('resignationId', '==', resignationId));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) return null;
+
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() };
+    } catch (error) {
+        console.error('Error fetching checklist:', error);
+        return null;
+    }
 };
 
 /**
  * Get resignation statistics
  */
-export const getResignationStats = () => {
-    const resignations = JSON.parse(localStorage.getItem('resignations') || '[]');
-    const currentYear = new Date().getFullYear();
+export const getResignationStats = async () => {
+    try {
+        const querySnapshot = await getDocs(collection(db, RESIGNATIONS_COLLECTION));
+        const resignations = querySnapshot.docs.map(doc => doc.data());
+        const currentYear = new Date().getFullYear();
 
-    return {
-        total: resignations.length,
-        pending: resignations.filter(r => r.status === 'Pending').length,
-        approved: resignations.filter(r => r.status === 'Approved').length,
-        thisYear: resignations.filter(r => new Date(r.date).getFullYear() === currentYear).length,
-        byReason: getResignationsByReason(resignations)
-    };
+        return {
+            total: resignations.length,
+            pending: resignations.filter(r => r.status === 'Pending').length,
+            approved: resignations.filter(r => r.status === 'Approved').length,
+            thisYear: resignations.filter(r => new Date(r.date).getFullYear() === currentYear).length,
+            byReason: getResignationsByReason(resignations)
+        };
+    } catch (error) {
+        console.error('Error fetching stats:', error);
+        return { total: 0, pending: 0, approved: 0, thisYear: 0, byReason: {} };
+    }
 };
 
 /**
- * Group resignations by reason
+ * Group resignations by reason (Helper)
  */
 const getResignationsByReason = (resignations) => {
     return resignations.reduce((acc, resignation) => {

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Lock, ShieldAlert, Cpu, ChevronRight, AlertTriangle } from 'lucide-react';
+import { geminiService } from '../../lib/ai/gemini';
 
 const REPORTS = [
-    { id: 1, subject: 'Unprofessional behavior in meeting', date: '2023-11-20', status: 'New', risk: 'Medium' },
-    { id: 2, subject: 'Payroll disparity concern', date: '2023-11-18', status: 'In Review', risk: 'High' },
+    { id: 1, subject: 'Unprofessional behavior in meeting', content: 'The manager raised their voice and made personal remarks during the marketing sync.', date: '2023-11-20', status: 'New', risk: 'Medium' },
+    { id: 2, subject: 'Payroll disparity concern', content: 'I noticed a significant difference in pay for the same role and seniority level.', date: '2023-11-18', status: 'In Review', risk: 'High' },
 ];
 
 export default function GrievanceAnalyzer() {
@@ -11,18 +12,17 @@ export default function GrievanceAnalyzer() {
     const [analyzing, setAnalyzing] = useState(false);
     const [analysis, setAnalysis] = useState(null);
 
-    const analyzeReport = () => {
+    const analyzeReport = async () => {
+        if (!selectedReport) return;
         setAnalyzing(true);
-        setTimeout(() => {
+        try {
+            const result = await geminiService.analyzeGrievance(selectedReport.content);
+            setAnalysis(result);
+        } catch (error) {
+            console.error("AI Analysis failed:", error);
+        } finally {
             setAnalyzing(false);
-            setAnalysis({
-                category: 'Workplace Conduct / Harassment',
-                sentiment: 'Negative (-0.8)',
-                severity: 'High (8/10)',
-                summary: 'Complainant reports consistent passive-aggressive behavior and public humiliation from Manager X during weekly standups.',
-                recommendation: 'Immediate separation of parties. Initiate formal investigation under Code of Conduct Policy Sec 4.2.'
-            });
-        }, 2000);
+        }
     };
 
     return (
@@ -75,7 +75,7 @@ export default function GrievanceAnalyzer() {
                         <div className="mb-6 pb-6 border-b border-border">
                             <h2 className="text-xl font-bold text-gray-900 mb-2">{selectedReport.subject}</h2>
                             <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100">
-                                "I would like to report an incident that occurred during the Tuesday marketing sync. The manager raised their voice and made personal remarks..."
+                                "{selectedReport.content}"
                             </p>
                         </div>
 

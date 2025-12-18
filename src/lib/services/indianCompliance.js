@@ -5,20 +5,45 @@
 
 class IndianComplianceService {
     /**
+     * Verhoeff Algorithm for Aadhaar Checksum
+     */
+    static verhoeffCheck(str) {
+        const d = [
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [1, 2, 3, 4, 0, 6, 7, 8, 9, 5], [2, 3, 4, 0, 1, 7, 8, 9, 5, 6], [3, 4, 0, 1, 2, 8, 9, 5, 6, 7], [4, 0, 1, 2, 3, 9, 5, 6, 7, 8],
+            [5, 9, 8, 7, 6, 0, 4, 3, 2, 1], [6, 5, 9, 8, 7, 1, 0, 4, 3, 2], [7, 6, 5, 9, 8, 2, 1, 0, 4, 3], [8, 7, 6, 5, 9, 3, 2, 1, 0], [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+        ];
+        const p = [
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [1, 5, 7, 6, 2, 8, 3, 0, 9, 4], [5, 8, 0, 3, 7, 9, 6, 1, 4, 2], [8, 9, 1, 6, 0, 4, 3, 5, 2, 7], [9, 4, 5, 3, 1, 2, 6, 8, 7, 0],
+            [4, 2, 8, 6, 5, 7, 3, 9, 0, 1], [2, 7, 9, 3, 8, 0, 6, 4, 1, 5], [7, 0, 4, 6, 9, 1, 3, 2, 5, 8]
+        ];
+        const inv = [0, 4, 3, 2, 1, 5, 6, 7, 8, 9];
+
+        let c = 0;
+        const invertedArray = str.split('').map(Number).reverse();
+
+        for (let i = 0; i < invertedArray.length; i++) {
+            c = d[c][p[i % 8][invertedArray[i]]];
+        }
+
+        return c === 0;
+    }
+
+    /**
      * Validate PAN (Permanent Account Number)
      * Format: ABCDE1234F
+     * 4th Char: P-(Individual), C-(Company), H-(HUF), F-(Firm), A-(AOP), T-(Trust), etc.
      */
     validatePAN(pan) {
         if (!pan) {
             return { valid: false, error: 'PAN is required' };
         }
 
-        const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+        const panRegex = /^[A-Z]{3}[PCHFATBLJG]{1}[A-Z]{1}[0-9]{4}[A-Z]{1}$/;
 
         if (!panRegex.test(pan)) {
             return {
                 valid: false,
-                error: 'Invalid PAN format. Expected format: ABCDE1234F'
+                error: 'Invalid PAN format or entity code. Expected: ABCDE1234F'
             };
         }
 
@@ -27,21 +52,25 @@ class IndianComplianceService {
 
     /**
      * Validate Aadhaar Number
-     * Format: 12 digits
+     * Format: 12 digits with Verhoeff Checksum
      */
     validateAadhaar(aadhaar) {
         if (!aadhaar) {
             return { valid: false, error: 'Aadhaar is required' };
         }
 
-        // Remove spaces and hyphens
         const cleanAadhaar = aadhaar.replace(/[\s-]/g, '');
 
         if (!/^\d{12}$/.test(cleanAadhaar)) {
-            return {
-                valid: false,
-                error: 'Aadhaar must be 12 digits'
-            };
+            return { valid: false, error: 'Aadhaar must be 12 digits' };
+        }
+
+        if (cleanAadhaar[0] === '0' || cleanAadhaar[0] === '1') {
+            return { valid: false, error: 'Aadhaar cannot start with 0 or 1' };
+        }
+
+        if (!IndianComplianceService.verhoeffCheck(cleanAadhaar)) {
+            return { valid: false, error: 'Invalid Aadhaar checksum (Verhoeff validation failed)' };
         }
 
         return { valid: true };
@@ -58,7 +87,6 @@ class IndianComplianceService {
 
     /**
      * Validate IFSC Code
-     * Format: ABCD0123456 (4 letters, 0, 6 alphanumeric)
      */
     validateIFSC(ifsc) {
         if (!ifsc) {
@@ -78,26 +106,30 @@ class IndianComplianceService {
     }
 
     /**
-     * Get bank details from IFSC (mock - replace with actual API)
+     * Get bank details from IFSC using Razorpay API
      */
     async getBankFromIFSC(ifsc) {
-        // Mock implementation - in production, use RBI/bank API
-        const mockBanks = {
-            'SBIN': 'State Bank of India',
-            'HDFC': 'HDFC Bank',
-            'ICIC': 'ICICI Bank',
-            'AXIS': 'Axis Bank',
-            'PUNB': 'Punjab National Bank'
-        };
-
-        const bankCode = ifsc.substring(0, 4);
-        const bankName = mockBanks[bankCode] || 'Unknown Bank';
-
-        return {
-            bank: bankName,
-            branch: 'Branch Name (Mock)',
-            address: 'Branch Address (Mock)'
-        };
+        try {
+            const response = await fetch(`https://ifsc.razorpay.com/${ifsc}`);
+            if (!response.ok) {
+                throw new Error('Bank details not found for this IFSC');
+            }
+            const data = await response.json();
+            return {
+                bank: data.BANK,
+                branch: data.BRANCH,
+                address: data.ADDRESS,
+                city: data.CITY,
+                state: data.STATE
+            };
+        } catch (error) {
+            console.warn('IFSC lookup failed, falling back to mock:', error);
+            return {
+                bank: 'Unknown Bank',
+                branch: 'Unknown Branch',
+                address: 'Address not available'
+            };
+        }
     }
 
     /**

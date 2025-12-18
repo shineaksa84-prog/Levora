@@ -201,14 +201,16 @@ const calculateConversionRate = (candidates) => {
 };
 
 /**
- * Link interview feedback to employee onboarding
+ * Link interview feedback to employee onboarding in Firestore
  */
-export const linkInterviewToOnboarding = (candidateId, interviewFeedback) => {
-    const employees = JSON.parse(localStorage.getItem('employees') || '[]');
-    const updatedEmployees = employees.map(emp => {
-        if (emp.candidateId === candidateId) {
-            return {
-                ...emp,
+export const linkInterviewToOnboarding = async (candidateId, interviewFeedback) => {
+    try {
+        const q = query(collection(db, 'employees'), where('candidateId', '==', candidateId));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+            const docRef = querySnapshot.docs[0].ref;
+            const updates = {
                 interviewFeedback: {
                     strengths: interviewFeedback.strengths || [],
                     areasForDevelopment: interviewFeedback.areasForDevelopment || [],
@@ -219,11 +221,12 @@ export const linkInterviewToOnboarding = (candidateId, interviewFeedback) => {
                 // Auto-generate training plan based on feedback
                 trainingPlan: generateTrainingPlan(interviewFeedback)
             };
-        }
-        return emp;
-    });
 
-    localStorage.setItem('employees', JSON.stringify(updatedEmployees));
+            await updateDoc(docRef, updates);
+        }
+    } catch (error) {
+        console.error('Error linking interview to onboarding:', error);
+    }
 };
 
 /**

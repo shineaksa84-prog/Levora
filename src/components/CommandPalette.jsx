@@ -57,24 +57,33 @@ export default function CommandPalette({ isOpen, onClose }) {
     }, [isOpen]);
 
     useEffect(() => {
-        if (!query.trim()) {
-            setResults(navigationCommands);
-            return;
-        }
+        const fetchResults = async () => {
+            if (!query.trim()) {
+                setResults(navigationCommands);
+                return;
+            }
 
-        const searchTerm = query.toLowerCase();
+            const searchTerm = query.toLowerCase();
 
-        // Search navigation commands
-        const navResults = navigationCommands.filter(cmd =>
-            cmd.title.toLowerCase().includes(searchTerm) ||
-            cmd.keywords.some(k => k.includes(searchTerm))
-        );
+            // Search navigation commands
+            const navResults = navigationCommands.filter(cmd =>
+                cmd.title.toLowerCase().includes(searchTerm) ||
+                cmd.keywords.some(k => k.includes(searchTerm))
+            );
 
-        // Search entities
-        const entityResults = globalSearch(query);
+            try {
+                // Search entities (now async)
+                const entityResults = await globalSearch(query);
+                setResults([...navResults, ...entityResults]);
+            } catch (error) {
+                console.error('Search failed:', error);
+                setResults(navResults);
+            }
 
-        setResults([...navResults, ...entityResults]);
-        setSelectedIndex(0);
+            setSelectedIndex(0);
+        };
+
+        fetchResults();
     }, [query]);
 
     const handleSelect = useCallback((item) => {

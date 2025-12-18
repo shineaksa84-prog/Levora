@@ -9,7 +9,10 @@ export const migrateToCloud = async () => {
     const results = {
         candidates: { success: 0, failed: 0 },
         employees: { success: 0, failed: 0 },
-        jobs: { success: 0, failed: 0 }
+        jobs: { success: 0, failed: 0 },
+        notifications: { success: 0, failed: 0 },
+        metrics: { success: 0, failed: 0 },
+        archived: { success: 0, failed: 0 }
     };
 
     try {
@@ -17,53 +20,53 @@ export const migrateToCloud = async () => {
         let operationCount = 0;
         const BATCH_LIMIT = 450; // Firestore limit is 500
 
-        // 1. Migrate Candidates
-        const candidates = JSON.parse(localStorage.getItem('candidates') || '[]');
-        if (candidates.length > 0) {
-            // Check if collection is empty to avoid duplicates (naive check)
-            const snapshot = await getDocs(collection(db, 'candidates'));
-            if (snapshot.empty) {
-                candidates.forEach(candidate => {
-                    const docRef = doc(collection(db, 'candidates')); // Auto-ID
-                    // Or use existing ID: doc(db, 'candidates', String(candidate.id))
-                    // Let's preserve IDs if possible, but they are likely simple numbers '1', '2'.
-                    // Better to let Firestore generate IDs and store 'localId' for mapping if needed.
-                    // Actually, if we want to preserve relationships (referrerId), we should try to keep IDs or map them.
-                    // For simplicity in this migration, let's assume we can re-use the ID if it's a string, 
-                    // or just dump it as is.
-                    // The existing IDs are likely numbers (1, 2) or 'EMP...' strings.
-
-                    const newRef = doc(db, 'candidates', String(candidate.id));
-                    batch.set(newRef, candidate);
-                    results.candidates.success++;
-                    operationCount++;
+        // Helper to check and add to batch
+        const addToBatch = (items, collectionName, resultKey) => {
+            if (items.length > 0) {
+                items.forEach(item => {
+                    if (operationCount < BATCH_LIMIT) {
+                        const docId = String(item.id || item.employeeId || Math.random().toString(36).substr(2, 9));
+                        const newRef = doc(db, collectionName, docId);
+                        batch.set(newRef, item);
+                        results[resultKey].success++;
+                        operationCount++;
+                    }
                 });
-            } else {
-                console.warn('Candidates collection not empty, skipping migration to avoid duplicates');
             }
+        };
+
+        // 1. Migrate Candidates (Only if empty to avoid duplicates)
+        const candidates = JSON.parse(localStorage.getItem('candidates') || '[]');
+        const candSnapshot = await getDocs(collection(db, 'candidates'));
+        if (candSnapshot.empty) {
+            addToBatch(candidates, 'candidates', 'candidates');
         }
 
-        // 2. Migrate Jobs (if any local jobs exist - usually hardcoded in this app but let's check)
+        // 2. Migrate Jobs
         const jobs = JSON.parse(localStorage.getItem('jobs') || '[]');
-        if (jobs.length > 0) {
-            jobs.forEach(job => {
-                const newRef = doc(db, 'jobs', String(job.id));
-                batch.set(newRef, job);
-                results.jobs.success++;
-                operationCount++;
-            });
+        const jobsSnapshot = await getDocs(collection(db, 'jobs'));
+        if (jobsSnapshot.empty) {
+            addToBatch(jobs, 'jobs', 'jobs');
         }
 
-        // 3. Migrate Employees (if any)
+        // 3. Migrate Employees
         const employees = JSON.parse(localStorage.getItem('employees') || '[]');
-        if (employees.length > 0) {
-            employees.forEach(emp => {
-                const newRef = doc(db, 'employees', String(emp.id)); // Use employee ID as doc ID
-                batch.set(newRef, emp);
-                results.employees.success++;
-                operationCount++;
-            });
+        const empSnapshot = await getDocs(collection(db, 'employees'));
+        if (empSnapshot.empty) {
+            addToBatch(employees, 'employees', 'employees');
         }
+
+        // 4. Migrate Notifications
+        const notifications = JSON.parse(localStorage.getItem('user_notifications') || '[]');
+        addToBatch(notifications, 'user_notifications', 'notifications');
+
+        // 5. Migrate Applicant Metrics
+        const metrics = JSON.parse(localStorage.getItem('applicantMetrics') || '[]');
+        addToBatch(metrics, 'applicant_metrics', 'metrics');
+
+        // 6. Migrate Archived Candidates
+        const archived = JSON.parse(localStorage.getItem('archivedCandidates') || '[]');
+        addToBatch(archived, 'archived_candidates', 'archived');
 
         // Commit if there are operations
         if (operationCount > 0) {

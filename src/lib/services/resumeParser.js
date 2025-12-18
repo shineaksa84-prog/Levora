@@ -1,6 +1,11 @@
 import { collection, addDoc, updateDoc, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { geminiService } from '../ai/gemini';
+import * as pdfjsLib from 'pdfjs-dist';
+import mammoth from 'mammoth';
+
+// Set PDF.js worker from CDN for ease of use in browser
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 /**
  * Resume Parser Service
@@ -76,27 +81,60 @@ class ResumeParserService {
      * Extract text from file (PDF, DOCX, TXT)
      */
     async extractTextFromFile(file) {
-        // Mock implementation - in production, use libraries like pdf.js or mammoth
-        return new Promise((resolve) => {
+        const fileName = file.name.toLowerCase();
+
+        try {
+            if (fileName.endsWith('.pdf')) {
+                return await this.extractTextFromPDF(file);
+            } else if (fileName.endsWith('.docx')) {
+                return await this.extractTextFromDocx(file);
+            } else if (fileName.endsWith('.txt')) {
+                return await this.extractTextFromTxt(file);
+            } else {
+                throw new Error('Unsupported file format. Please upload PDF, DOCX, or TXT.');
+            }
+        } catch (error) {
+            console.error('Text extraction failed:', error);
+            throw new Error(`Failed to extract text: ${error.message}`);
+        }
+    }
+
+    /**
+     * Helper to extract text from PDF
+     */
+    async extractTextFromPDF(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+        let fullText = '';
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map(item => item.str).join(' ');
+            fullText += pageText + '\n';
+        }
+
+        return fullText;
+    }
+
+    /**
+     * Helper to extract text from Docx
+     */
+    async extractTextFromDocx(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        return result.value;
+    }
+
+    /**
+     * Helper to extract text from Txt
+     */
+    async extractTextFromTxt(file) {
+        return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = (e) => {
-                // For now, just return a mock resume text
-                resolve(`
-          John Doe
-          Software Engineer
-          Email: john@example.com
-          Phone: +91-9876543210
-          
-          Skills: JavaScript, React, Node.js, Python, AWS
-          
-          Experience:
-          - Software Engineer at Tech Corp (2020-2023)
-          - Junior Developer at StartupXYZ (2018-2020)
-          
-          Education:
-          - B.Tech in Computer Science, IIT Delhi (2018)
-        `);
-            };
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (e) => reject(new Error('Failed to read TXT file'));
             reader.readAsText(file);
         });
     }

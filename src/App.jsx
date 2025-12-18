@@ -23,7 +23,9 @@ import Settings from './pages/Settings';
 import Attendance from './pages/Attendance';
 import EmployeeSelfService from './pages/EmployeeSelfService';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import LandingPage from './pages/LandingPage';
+import NotFound from './pages/NotFound';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -36,6 +38,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
             <Route path="/app" element={<Layout />}>
               <Route index element={<RoleBasedDashboard />} />
               <Route path="tenants" element={
@@ -134,6 +137,7 @@ function App() {
                 </ProtectedRoute>
               } />
             </Route>
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </HashRouter>

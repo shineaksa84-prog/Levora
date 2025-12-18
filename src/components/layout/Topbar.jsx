@@ -1,9 +1,16 @@
-import { Bell, Search, Command } from 'lucide-react';
+import { Bell, Search, Command, Menu } from 'lucide-react';
 
-export default function Topbar({ onCommandPaletteOpen }) {
+export default function Topbar({ onCommandPaletteOpen, onMenuClick }) {
     return (
-        <div className="h-16 border-b border-border bg-gradient-to-r from-card via-primary/5 to-secondary/5 backdrop-blur-sm flex items-center justify-between px-6 shadow-sm">
+        <div className="h-16 border-b border-border bg-white/50 backdrop-blur-sm flex items-center justify-between px-4 md:px-6 shadow-sm">
             <div className="flex items-center gap-4">
+                <button
+                    onClick={onMenuClick}
+                    className="md:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                    <Menu className="w-6 h-6" />
+                </button>
+
                 <button
                     onClick={onCommandPaletteOpen}
                     className="flex items-center gap-3 px-4 py-2 rounded-lg border border-input bg-background/50 backdrop-blur-sm hover:bg-accent/50 transition-all group cursor-pointer w-96"
