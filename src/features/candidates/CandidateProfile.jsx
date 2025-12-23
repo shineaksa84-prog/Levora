@@ -284,8 +284,8 @@ export default function CandidateProfile() {
                                             </h3>
                                             <div className="p-6 bg-yellow-50/50 rounded-3xl border border-yellow-100 min-h-[200px]">
                                                 <p className="text-sm text-yellow-900 font-medium italic">
-                                                    "Alice mentioned she is currently interviewing with Meta for a Similar role. 
-                                                    Salary flexibility exists but prefers base > $160k. Strong leadership potential."
+                                                    "Alice mentioned she is currently interviewing with Meta for a Similar role.
+                                                    Salary flexibility exists but prefers base &gt; $160k. Strong leadership potential."
                                                 </p>
                                                 <div className="mt-4 flex items-center gap-2 text-[10px] font-black text-yellow-700 uppercase">
                                                     <Clock className="w-3 h-3" /> Updated 4 hours ago

@@ -10,8 +10,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { getEnrichedTalentPool, parseNaturalLanguageQuery, scanForDuplicates, filterCandidates, saveView, getSavedViews } from '../../../lib/services/talentPoolService';
-import { useNavigate } from 'react-router-dom';
-import { getEnrichedTalentPool, parseNaturalLanguageQuery, scanForDuplicates, filterCandidates, saveView, getSavedViews } from '../../../lib/services/talentPoolService';
 import { ScanLine, BookmarkIcon, BookMarked } from 'lucide-react';
 import ProfileSidebar from './ProfileSidebar';
 
