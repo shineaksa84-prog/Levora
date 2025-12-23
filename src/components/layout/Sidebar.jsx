@@ -48,10 +48,20 @@ export default function Sidebar() {
                             )}
                         >
                             {isActive && (
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-3/4 bg-slate-900 rounded-r-full" />
+                                <motion.div
+                                    layoutId="active-nav-indicator"
+                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-3/4 bg-slate-900 rounded-r-full z-10"
+                                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                />
                             )}
-                            <item.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive ? "text-slate-900" : "text-gray-400 group-hover:text-gray-600")} />
-                            {item.name}
+                            <motion.div
+                                className="flex items-center gap-3 w-full"
+                                whileHover={{ x: 4 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                            >
+                                <item.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive ? "text-slate-900" : "text-gray-400 group-hover:text-gray-600")} />
+                                {item.name}
+                            </motion.div>
                         </Link>
                     );
                 })}

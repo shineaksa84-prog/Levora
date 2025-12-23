@@ -74,7 +74,7 @@ export default function Layout() {
                 {/* Page Content */}
                 <main className="flex-1 overflow-auto p-4 md:p-6 scroll-smooth pb-20 md:pb-6">
                     <Breadcrumb />
-                    <Outlet />
+                    <MotionProvider />
                 </main>
             </div>
 

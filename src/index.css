@@ -47,26 +47,26 @@
     --input: 214 32% 91%;
     --ring: 222 47% 18%;
     /* Match Primary */
-    --radius: 0.75rem;
+    --radius: 1rem;
+    /* Slightly softer corners for premium feel */
   }
 
   .dark {
-    --background: 222 47% 11%;
-    /* Deep slate background */
+    --background: 222 47% 6%;
+    /* Even deeper for better depth contrast */
     --foreground: 210 40% 98%;
-    --card: 222 47% 13%;
+    --card: 222 47% 10%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 13%;
+    --popover: 222 47% 10%;
     --popover-foreground: 210 40% 98%;
 
     --primary: 14 83% 78%;
-    /* Peach becomes primary in dark mode for contrast */
     --primary-foreground: 222 47% 11%;
 
-    --secondary: 217 19% 27%;
+    --secondary: 217 19% 20%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217 19% 27%;
+    --muted: 217 19% 20%;
     --muted-foreground: 215 20% 65%;
 
     --accent: 14 83% 72%;
@@ -77,16 +77,37 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 217 19% 27%;
-    --input: 217 19% 27%;
+    --border: 217 19% 22%;
+    --input: 217 19% 22%;
     --ring: 14 83% 78%;
   }
 
   body {
-    background: #f8fafc;
-    /* Slate 50 */
+    background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     min-height: 100vh;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Smooth Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.2);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4);
   }
 
   #root {
@@ -97,51 +118,85 @@
 /* Custom Gradient Utilities */
 @layer utilities {
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(222 47% 18%) 0%, hsl(222 47% 25%) 100%);
+    background: linear-gradient(135deg, hsl(200 47% 18%) 0%, hsl(200 47% 12%) 100%);
   }
 
-  .gradient-secondary {
-    background: linear-gradient(135deg, hsl(14 83% 72%) 0%, hsl(14 83% 82%) 100%);
+  .gradient-vibrant {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
   }
 
-  .gradient-accent {
-    background: linear-gradient(135deg, hsl(14 83% 72%) 0%, hsl(14 83% 78%) 100%);
-  }
-
-  /* Calm Mesh Gradient */
-  .bg-vibrant {
+  .bg-vibrant-mesh {
     background-color: hsla(210, 40%, 98%, 1);
     background-image:
-      radial-gradient(at 12% 87%, hsla(14, 83%, 72%, 0.15) 0px, transparent 50%),
-      radial-gradient(at 92% 16%, hsla(222, 47%, 18%, 0.1) 0px, transparent 50%),
-      radial-gradient(at 51% 52%, hsla(210, 40%, 96%, 1) 0px, transparent 50%);
-  }
-
-  .glass-effect {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      radial-gradient(at 0% 0%, hsla(222, 47%, 18%, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(14, 83%, 72%, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(222, 47%, 18%, 0.05) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(14, 83%, 72%, 0.1) 0px, transparent 50%);
   }
 
   .glass-card {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(226, 232, 240, 0.6);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-    @apply rounded-2xl transition-all duration-300 hover:shadow-lg hover:border-indigo-100;
+    background: hsla(0, 0%, 100%, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsla(214, 32%, 91%, 0.4);
+    box-shadow: 0 8px 32px 0 hsla(222, 47%, 11%, 0.01);
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .glass-card:hover {
+    background: hsla(0, 0%, 100%, 0.85);
+    border-color: hsla(222, 47%, 18%, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px 0 hsla(222, 47%, 11%, 0.05);
   }
 
   .glass-sidebar {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-right: 1px solid rgba(226, 232, 240, 0.8);
+    background: hsla(0, 0%, 100%, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid hsla(214, 32%, 91%, 0.5);
   }
 
-  .glow-text {
-    text-shadow: 0 0 20px rgba(71, 85, 105, 0.3);
+  /* Interactive Elements */
+  .hover-lift {
+    transition: transform 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+  }
+
+  .hover-lift:active {
+    transform: scale(0.95);
+  }
+
+  .active-indicator {
+    position: absolute;
+    left: 0;
+    width: 4px;
+    height: 24px;
+    background-color: hsl(var(--primary));
+    border-top-right-radius: 9999px;
+    border-bottom-right-radius: 9999px;
+    transition: all 0.3s ease;
+  }
+
+  /* Animation Utilities */
+  .stagger-item {
+    animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

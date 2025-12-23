@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles, MoreVertical, Paperclip, Mic } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { geminiService } from '../../lib/ai/gemini';
 
 export default function HRAssistant() {
@@ -21,16 +22,17 @@ export default function HRAssistant() {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [messages, isTyping]);
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
-        if (!inputValue.trim()) return;
+        const text = inputValue.trim();
+        if (!text) return;
 
         const newUserMessage = {
-            id: messages.length + 1,
+            id: Date.now(),
             type: 'user',
-            content: inputValue,
+            content: text,
             timestamp: new Date().toISOString()
         };
 
@@ -38,13 +40,10 @@ export default function HRAssistant() {
         setInputValue('');
         setIsTyping(true);
 
-        // Simulate AI response
-        // Call Gemini Service
         try {
-            const response = await geminiService.chat(inputValue, messages);
-
+            const response = await geminiService.chat(text, messages);
             const botResponse = {
-                id: messages.length + 2,
+                id: Date.now() + 1,
                 type: 'bot',
                 content: response.content,
                 timestamp: response.timestamp
@@ -53,9 +52,9 @@ export default function HRAssistant() {
         } catch (error) {
             console.error("Error getting AI response:", error);
             const errorResponse = {
-                id: messages.length + 2,
+                id: Date.now() + 2,
                 type: 'bot',
-                content: "I'm having trouble connecting to the server right now. Please try again later.",
+                content: "I'm having trouble connecting right now. Let's try that again in a moment.",
                 timestamp: new Date().toISOString()
             };
             setMessages(prev => [...prev, errorResponse]);
@@ -74,120 +73,139 @@ export default function HRAssistant() {
     return (
         <div className="flex h-[calc(100vh-12rem)] gap-6">
             {/* Main Chat Area */}
-            <div className="flex-1 flex flex-col bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+            <div className="flex-1 flex flex-col glass-card overflow-hidden">
                 {/* Chat Header */}
-                <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
+                <div className="p-4 border-b border-border flex items-center justify-between bg-muted/10">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
                             <Bot className="w-6 h-6" />
                         </div>
                         <div>
-                            <h3 className="font-semibold">HR Assistant Pro</h3>
+                            <h3 className="font-bold text-slate-900">Levora AI</h3>
                             <div className="flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                <span className="text-xs text-muted-foreground">Online</span>
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">System Ready</span>
                             </div>
                         </div>
                     </div>
-                    <button className="p-2 hover:bg-accent rounded-full text-muted-foreground transition-colors">
-                        <MoreVertical className="w-5 h-5" />
-                    </button>
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                    {messages.map((message) => (
-                        <div
-                            key={message.id}
-                            className={`flex gap-4 ${message.type === 'user' ? 'flex-row-reverse' : ''}`}
-                        >
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${message.type === 'user' ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
-                                }`}>
-                                {message.type === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
-                            </div>
-                            <div className={`flex flex-col max-w-[80%] ${message.type === 'user' ? 'items-end' : 'items-start'}`}>
-                                <div className={`p-4 rounded-2xl ${message.type === 'user'
-                                    ? 'bg-primary text-primary-foreground rounded-tr-none'
-                                    : 'bg-muted rounded-tl-none'
+                <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scrollbar-hide">
+                    <AnimatePresence initial={false}>
+                        {messages.map((message) => (
+                            <motion.div
+                                key={message.id}
+                                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                className={`flex gap-4 ${message.type === 'user' ? 'flex-row-reverse' : ''}`}
+                            >
+                                <div className={`w-10 h-10 rounded-full shadow-lg flex items-center justify-center flex-shrink-0 ${message.type === 'user' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-100 text-slate-800'
                                     }`}>
-                                    <p className="text-sm leading-relaxed">{message.content}</p>
+                                    {message.type === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
                                 </div>
-                                <span className="text-xs text-muted-foreground mt-1 px-1">
-                                    {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                            </div>
-                        </div>
-                    ))}
+                                <div className={`flex flex-col max-w-[80%] ${message.type === 'user' ? 'items-end' : 'items-start'}`}>
+                                    <div className={`p-4 rounded-2xl shadow-sm ${message.type === 'user'
+                                        ? 'bg-slate-900 text-white rounded-tr-none'
+                                        : 'bg-white border border-slate-100 rounded-tl-none'
+                                        }`}>
+                                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                                    </div>
+                                    <span className="text-[10px] uppercase font-bold text-slate-400 mt-2 px-1 tracking-widest">
+                                        {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
                     {isTyping && (
-                        <div className="flex gap-4">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                        <motion.div
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="flex gap-4"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-white border border-slate-100 text-slate-800 shadow-sm flex items-center justify-center flex-shrink-0">
                                 <Bot className="w-5 h-5" />
                             </div>
-                            <div className="bg-muted p-4 rounded-2xl rounded-tl-none flex items-center gap-1">
-                                <span className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                <span className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                <span className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                            <div className="bg-white border border-slate-100 p-4 rounded-2xl rounded-tl-none flex items-center gap-1.5 shadow-sm">
+                                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                             </div>
-                        </div>
+                        </motion.div>
                     )}
                     <div ref={messagesEndRef} />
                 </div>
 
                 {/* Input Area */}
-                <div className="p-4 border-t border-border bg-background">
-                    <form onSubmit={handleSendMessage} className="relative">
-                        <input
-                            type="text"
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            placeholder="Ask me anything about candidates, jobs, or HR tasks..."
-                            className="w-full pl-4 pr-32 py-4 rounded-xl border border-input bg-muted/30 focus:bg-background focus:outline-none focus:ring-2 focus:ring-ring transition-all"
-                        />
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                            <button type="button" className="p-2 hover:bg-accent rounded-lg text-muted-foreground transition-colors">
-                                <Paperclip className="w-5 h-5" />
-                            </button>
-                            <button type="button" className="p-2 hover:bg-accent rounded-lg text-muted-foreground transition-colors">
-                                <Mic className="w-5 h-5" />
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={!inputValue.trim()}
-                                className="p-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <Send className="w-5 h-5" />
-                            </button>
+                <div className="p-4 md:p-6 border-t border-border bg-white/50 backdrop-blur-sm">
+                    <form onSubmit={handleSendMessage} className="relative group">
+                        <div className="absolute inset-0 bg-primary/5 rounded-2xl blur-xl group-focus-within:bg-primary/10 transition-colors" />
+                        <div className="relative flex items-center bg-white border border-slate-200 rounded-2xl p-1.5 shadow-sm focus-within:border-primary/30 transition-all">
+                            <input
+                                type="text"
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                placeholder="Message Levora AI..."
+                                className="flex-1 px-4 py-3 bg-transparent outline-none text-slate-900 placeholder:text-slate-400 text-sm"
+                            />
+                            <div className="flex items-center gap-1 pr-1">
+                                <button type="button" className="p-2 hover:bg-slate-50 rounded-xl text-slate-400 transition-colors">
+                                    <Paperclip className="w-5 h-5" />
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={!inputValue.trim()}
+                                    className="p-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all disabled:opacity-30 disabled:grayscale shadow-lg shadow-slate-900/10 active:scale-95"
+                                >
+                                    <Send className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
             </div>
 
             {/* Sidebar / Context Panel */}
-            <div className="w-80 flex flex-col gap-6">
-                <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
-                    <h3 className="font-semibold mb-3 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-primary" />
-                        Suggested Actions
+            <div className="w-80 flex flex-col gap-4">
+                <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="glass-card p-5"
+                >
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-indigo-500" />
+                        Suggested Prompts
                     </h3>
                     <div className="space-y-2">
                         {suggestions.map((suggestion, index) => (
-                            <button
+                            <motion.button
                                 key={index}
+                                whileHover={{ x: 4 }}
                                 onClick={() => setInputValue(suggestion)}
-                                className="w-full text-left p-3 rounded-lg text-sm bg-muted/50 hover:bg-accent hover:text-accent-foreground transition-colors border border-transparent hover:border-border"
+                                className="w-full text-left p-3 rounded-xl text-xs font-medium bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 transition-colors border border-transparent hover:border-indigo-100"
                             >
                                 {suggestion}
-                            </button>
+                            </motion.button>
                         ))}
                     </div>
-                </div>
+                </motion.div>
 
-                <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 p-4">
-                    <h3 className="font-semibold mb-2 text-primary">Pro Tip</h3>
-                    <p className="text-sm text-muted-foreground">
-                        You can ask me to analyze resumes directly. Just upload a PDF and I'll extract key skills and experience!
+                <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-slate-900 rounded-2xl p-5 text-white"
+                >
+                    <h3 className="font-bold mb-2 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-indigo-400" />
+                        AI Analysis
+                    </h3>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                        I can analyze resumes, draft personalized offer letters, and even predict hiring velocity based on your pipeline.
                     </p>
-                </div>
+                </motion.div>
             </div>
         </div>
     );

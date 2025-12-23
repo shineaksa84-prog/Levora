@@ -29,10 +29,12 @@ import NotFound from './pages/NotFound';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import ToastContainer from './components/ui/ToastContainer';
 
 function App() {
   return (
     <AuthProvider>
+      <ToastContainer />
       <HashRouter>
         <Suspense fallback={<LoadingScreen />}>
           <Routes>

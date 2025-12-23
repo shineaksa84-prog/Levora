@@ -451,6 +451,125 @@ class GeminiService {
             ]
         };
     }
+
+    /**
+     * Generate Deep Sourcing Results from Ecosystems
+     */
+    async generateDeepSourcingResults(query, type = 'github') {
+        const prompts = {
+            github: `Find top technical profiles for: "${query}". Return valid JSON array of 5 objects with keys: name, handle, role, topRepo (name, language, stars), codeQualityScore (0-100), contributions (lastYearCount), proximity (1-6 degrees), matchedTech (array).`,
+            patents: `Find top inventors for: "${query}". Return valid JSON array of 5 objects with keys: name, title, currentAffiliation, topPatent (title, filingYear), citationCount, proximity (1-6 degrees), expertiseMap (array).`,
+            conferences: `Find top speakers for: "${query}". Return valid JSON array of 5 objects with keys: name, role, company, conferenceName, talkTitle, proximity (1-6 degrees), topics (array).`
+        };
+
+        const realResponse = await this.callGeminiAPI(prompts[type] || prompts.github);
+
+        if (realResponse) {
+            try {
+                const cleanJson = realResponse.replace(/```json/g, '').replace(/```/g, '');
+                return JSON.parse(cleanJson);
+            } catch (e) { console.error(e); }
+        }
+
+        // Mock ecosystem data
+        const mocks = {
+            github: [
+                { name: "Sarah Chen", handle: "schen_dev", role: "Sr. Distributed Systems Eng", topRepo: { name: "fast-raft", language: "Rust", stars: 4200 }, codeQualityScore: 98, contributions: 1200, proximity: 2, matchedTech: ["Rust", "Distributed Systems"] },
+                { name: "Alex Rivera", handle: "arivera_oss", role: "Principal Cloud Architect", topRepo: { name: "k8s-operator-sdk", language: "Go", stars: 1500 }, codeQualityScore: 94, contributions: 850, proximity: 4, matchedTech: ["Go", "Kubernetes"] }
+            ],
+            patents: [
+                { name: "Dr. Elena Volkov", title: "Chief Scientist", currentAffiliation: "Neural Dynamics", topPatent: { title: "Adaptive Bias Correction in LLMs", filingYear: 2023 }, citationCount: 450, proximity: 3, expertiseMap: ["NLP", "Bias Mitigation"] },
+                { name: "Marcus Thorne", title: "Research Fellow", currentAffiliation: "DeepScale", topPatent: { title: "Hierarchical Reinforcement Learning for Robotics", filingYear: 2022 }, citationCount: 1200, proximity: 1, expertiseMap: ["RL", "Robotics"] }
+            ],
+            conferences: [
+                { name: "Jordan Smith", role: "Tech Lead", company: "Meta", conferenceName: "React Conf 2024", talkTitle: "Server Components at Scale", proximity: 2, topics: ["React", "Performance"] },
+                { name: "Lisa Wong", role: "DevOps Engineer", company: "Netflix", conferenceName: "AWS re:Invent", talkTitle: "Chaos Engineering in the Cloud", proximity: 5, topics: ["AWS", "Reliability"] }
+            ]
+        };
+
+        return mocks[type] || mocks.github;
+    }
+
+    /**
+     * Generate Hyper-Personalized Outreach Hook
+     */
+    async generateHyperPersonalizedHook(prospectData) {
+        const realResponse = await this.callGeminiAPI(
+            `Generate a hyper-personalized, one-sentence outreach hook for this prospect. Mention a specific detail from their profile: ${JSON.stringify(prospectData)}. 
+            Make it professional, non-creepy, and high-impact. Return valid JSON only with keys: hook, tone.`
+        );
+
+        if (realResponse) {
+            try {
+                const cleanJson = realResponse.replace(/```json/g, '').replace(/```/g, '');
+                return JSON.parse(cleanJson);
+            } catch (e) { console.error(e); }
+        }
+
+        return {
+            hook: `I was really impressed by your work on the ${prospectData.topRepo?.name || 'recent projects'} and your contributions to the ${prospectData.matchedTech?.[0] || 'tech'} community.`,
+            tone: "Professional"
+        };
+    }
+
+    /**
+     * Parse Natural Language to Boolean Tree
+     */
+    async parseNaturalToBoolean(naturalQuery) {
+        const realResponse = await this.callGeminiAPI(
+            `Convert this sourcing request into a node-based Boolean search tree structure. 
+            Request: "${naturalQuery}"
+            Return valid JSON only with a recursive structure: { type: 'operator'|'term', value: 'AND'|'OR'|'NOT'|string, children: [node] }.`
+        );
+
+        if (realResponse) {
+            try {
+                const cleanJson = realResponse.replace(/```json/g, '').replace(/```/g, '');
+                return JSON.parse(cleanJson);
+            } catch (e) { console.error(e); }
+        }
+
+        return {
+            type: 'operator',
+            value: 'AND',
+            children: [
+                { type: 'term', value: 'Senior' },
+                {
+                    type: 'operator', value: 'OR', children: [
+                        { type: 'term', value: 'React' },
+                        { type: 'term', value: 'Frontend' }
+                    ]
+                }
+            ]
+        };
+    }
+
+    /**
+     * Generate Omni-Channel Outreach Sequence
+     */
+    async generateOmniChannelSequence(prospectData, companyContext) {
+        const realResponse = await this.callGeminiAPI(
+            `Create a 3-touch omni-channel outreach sequence for this prospect: ${JSON.stringify(prospectData)}.
+            Company Context: ${JSON.stringify(companyContext)}.
+            Touch 1: Personalized LinkedIn Invite.
+            Touch 2: Value-driven Email (referencing specific work).
+            Touch 3: Low-pressure Follow-up.
+            Return valid JSON array of 3 objects with keys: channel, subject, body.`
+        );
+
+        if (realResponse) {
+            try {
+                const cleanJson = realResponse.replace(/```json/g, '').replace(/```/g, '');
+                return JSON.parse(cleanJson);
+            } catch (e) { console.error(e); }
+        }
+
+        return [
+            { channel: 'LinkedIn', subject: null, body: `Hi ${prospectData.name}, I loved your work on ${prospectData.topRepo?.name || 'OSS'}. Would love to connect!` },
+            { channel: 'Email', subject: `Exciting Engineering Role at Levora`, body: `Hi ${prospectData.name},\nYour expertise in ${prospectData.matchedTech?.[0]} caught our eye...` },
+            { channel: 'Follow-up', subject: `Quick nudge`, body: `Just wanted to see if you have 5 mins for a quick chat?` }
+        ];
+    }
 }
 
 export const geminiService = new GeminiService();
