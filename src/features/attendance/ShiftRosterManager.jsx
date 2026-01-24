@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Calendar, Clock, ChevronLeft, ChevronRight, Save, AlertTriangle, Loader2 } from 'lucide-react';
 import { SHIFTS, getWeeklyRoster, saveRoster } from '../../lib/services/attendanceService';
 import { getEmployees } from '../../lib/services/employeeService';
+import { toast } from '../../lib/services/toastService';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -59,9 +60,9 @@ export default function ShiftRosterManager() {
         setSaving(true);
         try {
             await saveRoster(currentWeekStart, schedule);
-            alert('Roster saved successfully!');
+            toast.success('Roster transmission successful. Schedules synchronized.');
         } catch (error) {
-            alert('Failed to save roster');
+            toast.error('Strategic failure: Roster could not be committed to the matrix.');
         } finally {
             setSaving(false);
         }
@@ -78,99 +79,115 @@ export default function ShiftRosterManager() {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-indigo-600" />
-                        Shift Roster Manager
+        <div className="space-y-10 animate-in fade-in duration-700">
+            {/* Header Hub */}
+            <div className="flex justify-between items-center bg-card rounded-[2.5rem] p-10 border border-border shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-primary/10 transition-colors"></div>
+                <div className="relative z-10">
+                    <h2 className="text-2xl font-black text-foreground flex items-center gap-4 uppercase tracking-tight">
+                        <div className="p-3 bg-primary/10 rounded-2xl shadow-inner">
+                            <Calendar className="w-8 h-8 text-primary" />
+                        </div>
+                        Shift Roster <span className="text-primary italic">Controller</span>
                     </h2>
-                    <p className="text-sm text-gray-500">Plan and assign weekly shifts.</p>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-3 ml-16">Personnel Scheduling // Weekly Vector Allocation</p>
                 </div>
-                <div className="flex gap-2">
-                    <button className="text-gray-500 hover:text-gray-900"><ChevronLeft className="w-5 h-5" /></button>
-                    <span className="font-bold text-gray-700">Dec 09 - Dec 15, 2025</span>
-                    <button className="text-gray-500 hover:text-gray-900"><ChevronRight className="w-5 h-5" /></button>
+
+                <div className="flex items-center gap-6 relative z-10 bg-background/50 p-4 rounded-2xl border border-border shadow-inner">
+                    <button className="text-primary hover:scale-110 active:scale-95 transition-all"><ChevronLeft className="w-6 h-6" /></button>
+                    <span className="text-xs font-black text-foreground uppercase tracking-widest px-4 border-x border-border/50">Dec 09 — Dec 15, 2025</span>
+                    <button className="text-primary hover:scale-110 active:scale-95 transition-all"><ChevronRight className="w-6 h-6" /></button>
                 </div>
+
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-indigo-700 shadow-sm disabled:opacity-70"
+                    className="bg-primary text-primary-foreground px-10 py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-primary/30 disabled:opacity-70 group overflow-hidden relative"
                 >
-                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Publish Roster
+                    <span className="relative z-10 flex items-center gap-3">
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        Broadcast Roster
+                    </span>
+                    <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                 </button>
             </div>
 
-            {/* Shift Palette */}
-            <div className="flex gap-4 overflow-x-auto pb-2">
-                {SHIFTS.map(shift => (
-                    <button
-                        key={shift.id}
-                        onClick={() => setSelectedShift(shift.id)}
-                        className={`flex items-center gap-3 px-4 py-2 rounded-lg border transition-all ${selectedShift === shift.id
-                            ? 'ring-2 ring-indigo-500 ring-offset-2 border-transparent shadow-md'
-                            : 'border-gray-200 hover:bg-gray-50'
-                            } ${shift.color.replace('text-', 'bg-opacity-10 ')}`}
-                    >
-                        <div className={`w-3 h-3 rounded-full ${shift.color.replace('bg-', 'bg-').split(' ')[0].replace('100', '500')}`} />
-                        <div className="text-left">
-                            <p className="text-xs font-bold text-gray-900">{shift.name}</p>
-                            <p className="text-[10px] text-gray-500">{shift.time}</p>
-                        </div>
-                    </button>
-                ))}
+            {/* Shift Palette Matrix */}
+            <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+                {SHIFTS.map(shift => {
+                    const isActive = selectedShift === shift.id;
+                    return (
+                        <button
+                            key={shift.id}
+                            onClick={() => setSelectedShift(shift.id)}
+                            className={`flex items-center gap-4 px-6 py-4 rounded-2xl border transition-all shrink-0 ${isActive
+                                ? 'bg-primary text-primary-foreground border-transparent shadow-2xl shadow-primary/20 scale-105'
+                                : 'bg-card border-border hover:border-primary/50 text-foreground'
+                                }`}
+                        >
+                            <div className={`w-3 h-3 rounded-full shadow-lg ${isActive ? 'bg-primary-foreground animate-pulse' : 'bg-primary'}`} />
+                            <div className="text-left">
+                                <p className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-primary-foreground' : 'text-foreground'}`}>{shift.name}</p>
+                                <p className={`text-[9px] font-bold uppercase ${isActive ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{shift.time}</p>
+                            </div>
+                        </button>
+                    );
+                })}
             </div>
 
-            {/* Roster Grid */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-50 text-gray-500 font-bold uppercase text-xs">
+            {/* Roster Node Matrix */}
+            <div className="bg-card border border-border rounded-[3rem] shadow-2xl overflow-hidden">
+                <table className="w-full text-sm text-left border-collapse">
+                    <thead className="bg-primary/5 text-muted-foreground font-black uppercase text-[9px] tracking-[0.2em]">
                         <tr>
-                            <th className="px-6 py-4 w-48">Employee</th>
+                            <th className="px-10 py-8 border-b border-border">Entity Profile</th>
                             {DAYS.map(day => (
-                                <th key={day} className="px-2 py-4 text-center">{day}</th>
+                                <th key={day} className="px-2 py-8 text-center border-b border-border">{day}</th>
                             ))}
-                            <th className="px-6 py-4 text-right">Total Hrs</th>
+                            <th className="px-10 py-8 text-right border-b border-border">Cycle Hrs</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-border/30">
                         {employees.map(emp => {
                             const empShifts = schedule[emp.id] || [];
-                            const totalHours = empShifts.filter(s => s !== 'WO').length * 9; // Approx 9 hours
+                            const totalHours = empShifts.filter(s => s !== 'WO').length * 9;
                             return (
-                                <tr key={emp.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 font-medium text-gray-900">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+                                <tr key={emp.id} className="hover:bg-primary/[0.02] transition-colors group">
+                                    <td className="px-10 py-6 border-r border-border/10">
+                                        <div className="flex items-center gap-5">
+                                            <div className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-black text-primary shadow-inner group-hover:scale-110 transition-transform">
                                                 {emp.avatar || emp.name.charAt(0)}
                                             </div>
                                             <div>
-                                                <p>{emp.name}</p>
-                                                <p className="text-xs text-gray-400 font-normal">{emp.role}</p>
+                                                <p className="text-xs font-black text-foreground uppercase tracking-tight">{emp.name}</p>
+                                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">{emp.role}</p>
                                             </div>
                                         </div>
                                     </td>
                                     {empShifts.map((shiftCode, idx) => {
                                         const shift = getShiftDetails(shiftCode);
+                                        const isWO = shiftCode === 'WO';
                                         return (
-                                            <td key={idx} className="p-1 text-center">
+                                            <td key={idx} className="p-1.5 text-center">
                                                 <button
                                                     onClick={() => handleCellClick(emp.id, idx)}
-                                                    className={`w-full py-2 rounded-md text-xs font-bold border transition-all ${shift.color}`}
+                                                    className={`w-full py-3 rounded-xl text-[9px] font-black uppercase border transition-all ${isWO
+                                                        ? 'bg-muted/30 border-border text-muted-foreground italic'
+                                                        : 'bg-primary/5 border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground'
+                                                        }`}
                                                 >
                                                     {shiftCode}
                                                 </button>
                                             </td>
                                         );
                                     })}
-                                    <td className="px-6 py-4 text-right font-mono font-bold text-gray-700">
+                                    <td className="px-10 py-6 text-right border-l border-border/10">
                                         {totalHours > 48 ? (
-                                            <span className="text-red-500 flex items-center justify-end gap-1">
-                                                <AlertTriangle className="w-3 h-3" /> {totalHours}
+                                            <span className="text-rose-500 font-black flex items-center justify-end gap-2 text-[10px] uppercase tracking-widest">
+                                                <AlertTriangle className="w-3 h-3" /> {totalHours} H
                                             </span>
                                         ) : (
-                                            <span>{totalHours}</span>
+                                            <span className="text-foreground font-black text-[10px] uppercase tracking-widest">{totalHours} H</span>
                                         )}
                                     </td>
                                 </tr>
@@ -180,12 +197,19 @@ export default function ShiftRosterManager() {
                 </table>
             </div>
 
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex gap-2 text-xs text-blue-800">
-                <Clock className="w-4 h-4 mt-0.5" />
-                <p>
-                    <strong>Compliance Check:</strong> System highlights employees exceeding 48 hours/week.
-                    Ensure mandatory Weekly Offs ("WO") are assigned.
-                </p>
+            {/* Compliance Matrix Monitor */}
+            <div className="bg-primary/5 border border-primary/20 rounded-[2rem] p-8 flex gap-6 items-start relative overflow-hidden group">
+                <div className="absolute inset-y-0 left-0 w-1 bg-primary group-hover:w-2 transition-all"></div>
+                <div className="p-4 bg-background rounded-2xl shadow-inner shrink-0">
+                    <Clock className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                    <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2">Institutional Compliance Monitor</h4>
+                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest leading-relaxed opacity-80">
+                        System identifies workforce vectors exceeding 48H/Week protocol.
+                        Mandatory weekly off-cycles <span className="text-primary italic">("WO")</span> are required for operational integrity.
+                    </p>
+                </div>
             </div>
         </div>
     );

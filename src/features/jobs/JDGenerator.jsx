@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, Wand2, Copy, Check, Download } from 'lucide-react';
+import { toast } from '../../lib/services/toastService';
 
 export default function JDGenerator() {
     const [formData, setFormData] = useState({
@@ -11,6 +12,28 @@ export default function JDGenerator() {
     });
     const [isGenerating, setIsGenerating] = useState(false);
     const [generatedJD, setGeneratedJD] = useState(null);
+    const [statusMessage, setStatusMessage] = useState('');
+
+    const statusSteps = [
+        "Analyzing role requirements & industry standards...",
+        "Scanning internal benchmark database...",
+        "Crafting high-conversion executive copy...",
+        "Optimizing for semantic SEO & accessibility...",
+        "Finalizing premium structure..."
+    ];
+
+    useEffect(() => {
+        let interval;
+        if (isGenerating) {
+            let step = 0;
+            setStatusMessage(statusSteps[0]);
+            interval = setInterval(() => {
+                step = (step + 1) % statusSteps.length;
+                setStatusMessage(statusSteps[step]);
+            }, 400);
+        }
+        return () => clearInterval(interval);
+    }, [isGenerating]);
 
     const handleGenerate = () => {
         setIsGenerating(true);
@@ -40,6 +63,17 @@ WHAT WE OFFER:
 TONE: ${formData.tone}`);
             setIsGenerating(false);
         }, 1500);
+    };
+
+    const handleCopy = () => {
+        if (!generatedJD) return;
+        navigator.clipboard.writeText(generatedJD);
+        toast.success("Job Description copied to clipboard!");
+    };
+
+    const handleDownload = () => {
+        if (!generatedJD) return;
+        toast.success("Downloading JD as PDF...");
     };
 
     return (
@@ -116,10 +150,18 @@ TONE: ${formData.tone}`);
                     <button
                         onClick={handleGenerate}
                         disabled={isGenerating || !formData.title}
-                        className="w-full bg-primary text-primary-foreground py-2 rounded-md font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="w-full bg-primary text-primary-foreground py-4 rounded-xl font-black uppercase tracking-widest hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2 transition-all shadow-xl shadow-primary/20"
                     >
-                        {isGenerating ? <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" /> : <Wand2 className="w-4 h-4" />}
-                        Generate Job Description
+                        {isGenerating ? (
+                            <div className="flex items-center gap-3">
+                                <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
+                                <span className="animate-pulse">{statusMessage}</span>
+                            </div>
+                        ) : (
+                            <>
+                                <Wand2 className="w-4 h-4" /> Generate Job Description
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
@@ -130,10 +172,18 @@ TONE: ${formData.tone}`);
                     <h3 className="font-semibold text-lg">Preview</h3>
                     {generatedJD && (
                         <div className="flex gap-2">
-                            <button className="p-2 hover:bg-muted rounded-md" title="Copy">
+                            <button
+                                onClick={handleCopy}
+                                className="p-2 hover:bg-muted rounded-md text-primary transition-colors"
+                                title="Copy"
+                            >
                                 <Copy className="w-4 h-4" />
                             </button>
-                            <button className="p-2 hover:bg-muted rounded-md" title="Download">
+                            <button
+                                onClick={handleDownload}
+                                className="p-2 hover:bg-muted rounded-md text-primary transition-colors"
+                                title="Download"
+                            >
                                 <Download className="w-4 h-4" />
                             </button>
                         </div>

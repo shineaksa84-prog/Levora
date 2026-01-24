@@ -45,67 +45,65 @@ export default function BankDetailsValidator({ onValidated }) {
     };
 
     return (
-        <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                    <Building2 className="w-5 h-5 text-primary" />
+        <div className="bg-card rounded-[2rem] border border-border p-8 shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-primary/10 transition-colors"></div>
+
+            <div className="flex items-center gap-4 mb-8">
+                <div className="p-3 bg-primary/10 rounded-2xl shadow-inner">
+                    <Building2 className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                    <h3 className="font-semibold">Bank Account Details</h3>
-                    <p className="text-sm text-muted-foreground">Validate bank account and IFSC code</p>
+                    <h3 className="font-black text-lg text-foreground tracking-tight">Fiscal <span className="text-primary italic">Gateway</span></h3>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Bank & IFSC Infrastructure Validation</p>
                 </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6 relative z-10">
                 <div>
-                    <label className="text-sm font-medium mb-2 block">Account Number</label>
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3 block">Account Coordinates</label>
                     <input
                         type="text"
                         value={accountNumber}
                         onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
                         placeholder="Enter account number"
-                        className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring font-mono"
+                        className="w-full px-5 py-4 rounded-2xl border border-border bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary/50 outline-none text-lg font-black tracking-widest transition-all placeholder:text-muted-foreground/30 font-mono"
                     />
                 </div>
 
                 <div>
-                    <label className="text-sm font-medium mb-2 block">IFSC Code</label>
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3 block">Neural IFSC Code</label>
                     <input
                         type="text"
                         value={ifscCode}
                         onChange={(e) => setIfscCode(e.target.value.toUpperCase().slice(0, 11))}
                         placeholder="ABCD0123456"
                         maxLength={11}
-                        className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring font-mono"
+                        className="w-full px-5 py-4 rounded-2xl border border-border bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary/50 outline-none text-lg font-black tracking-[0.3em] transition-all placeholder:text-muted-foreground/30 font-mono"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">Format: 4 letters + 0 + 6 alphanumeric</p>
+                    <p className="text-[8px] font-black text-muted-foreground mt-2 uppercase tracking-widest opacity-60">Architect: 4 Letters + 0 + 6 Alphanumeric</p>
                 </div>
 
                 {validation && !validation.valid && (
-                    <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                        <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                        <p className="text-sm text-red-700">{validation.error}</p>
+                    <div className="flex items-start gap-3 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl animate-in shake duration-500">
+                        <XCircle className="w-5 h-5 text-rose-500 shrink-0" />
+                        <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mt-0.5">{validation.error}</p>
                     </div>
                 )}
 
                 {bankDetails && validation?.valid && (
-                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-2">
-                        <div className="flex items-center gap-2 mb-3">
-                            <CheckCircle className="w-5 h-5 text-green-500" />
-                            <p className="text-sm text-green-700 font-medium">Bank Details Verified</p>
+                    <div className="p-6 bg-emerald-500/5 border border-emerald-500/10 rounded-3xl space-y-4 animate-in zoom-in duration-500">
+                        <div className="flex items-center gap-3">
+                            <CheckCircle className="w-5 h-5 text-emerald-500" />
+                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Institution Verified</p>
                         </div>
-                        <div className="space-y-1 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Bank:</span>
-                                <span className="font-medium">{bankDetails.bank}</span>
+                        <div className="space-y-2 text-[10px] font-black uppercase tracking-widest">
+                            <div className="flex justify-between border-b border-emerald-500/10 pb-2">
+                                <span className="text-muted-foreground">Bank Node:</span>
+                                <span className="text-foreground">{bankDetails.bank}</span>
                             </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Branch:</span>
-                                <span className="font-medium">{bankDetails.branch}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">IFSC:</span>
-                                <span className="font-mono font-medium">{ifscCode.toUpperCase()}</span>
+                            <div className="flex justify-between border-b border-emerald-500/10 pb-2">
+                                <span className="text-muted-foreground">Branch Sector:</span>
+                                <span className="text-foreground">{bankDetails.branch}</span>
                             </div>
                         </div>
                     </div>
@@ -114,20 +112,39 @@ export default function BankDetailsValidator({ onValidated }) {
                 <button
                     onClick={handleValidate}
                     disabled={!accountNumber || !ifscCode || loading}
-                    className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed group overflow-hidden relative"
                 >
-                    {loading ? (
-                        <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            Validating...
-                        </>
-                    ) : (
-                        <>
-                            <Search className="w-4 h-4" />
-                            Validate Details
-                        </>
-                    )}
+                    <div className="relative z-10 flex items-center justify-center gap-3">
+                        {loading ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <span>CROSS-REFING...</span>
+                            </>
+                        ) : (
+                            <>
+                                <Search className="w-4 h-4" />
+                                <span>VALIDATE INFRASTRUCTURE</span>
+                            </>
+                        )}
+                    </div>
                 </button>
+
+                {bankDetails && validation?.valid && (
+                    <button
+                        onClick={() => {
+                            if (onValidated) {
+                                onValidated({
+                                    accountNumber,
+                                    ifscCode: ifscCode.toUpperCase(),
+                                    bankDetails
+                                });
+                            }
+                        }}
+                        className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 mt-2"
+                    >
+                        Apply to Global Profile
+                    </button>
+                )}
             </div>
         </div>
     );

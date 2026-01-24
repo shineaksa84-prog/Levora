@@ -5,13 +5,20 @@ import {
     CheckSquare, Square, ChevronDown, ChevronRight,
     ArrowUpDown, UserPlus, Trash2, Tag, Share2,
     Calendar, MessageSquare, Shield, AlertCircle,
-    Info, Sparkles, TrendingUp, Globe, Link as LinkIcon
+    Info, Sparkles, TrendingUp, Globe, Link as LinkIcon,
+    BarChart3, Rocket
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { getEnrichedTalentPool, parseNaturalLanguageQuery, scanForDuplicates, filterCandidates, saveView, getSavedViews } from '../../../lib/services/talentPoolService';
 import { ScanLine, BookmarkIcon, BookMarked } from 'lucide-react';
 import ProfileSidebar from './ProfileSidebar';
+import ComparisonBench from './ComparisonBench';
+import OutreachGenerator from '../../recruitment/OutreachGenerator';
+import FeedbackGenerator from '../../recruitment/FeedbackGenerator';
+import InterviewScorecard from '../../recruitment/InterviewScorecard';
+import OfferGenerator from '../../recruitment/OfferGenerator';
+import { toast } from '../../../lib/services/toastService';
 
 export default function TalentPool() {
     const navigate = useNavigate();
@@ -25,6 +32,12 @@ export default function TalentPool() {
     const [aiInterpretation, setAiInterpretation] = useState(null);
     const [isFilterOpen, setIsFilterOpen] = useState(true);
     const [density, setDensity] = useState('standard'); // compact, standard, comfortable
+    const [showOutreach, setShowOutreach] = useState(false);
+    const [showFeedback, setShowFeedback] = useState(false);
+    const [showScorecard, setShowScorecard] = useState(false);
+    const [showOffer, setShowOffer] = useState(false);
+    const [showComparison, setShowComparison] = useState(false);
+    const [activeCandidate, setActiveCandidate] = useState(null);
 
     // New State for Phase 2
     const [savedViews, setSavedViews] = useState([]);
@@ -54,13 +67,35 @@ export default function TalentPool() {
 
     const loadData = async () => {
         setLoading(true);
-        const [data, views] = await Promise.all([
-            getEnrichedTalentPool(),
-            getSavedViews()
-        ]);
-        setCandidates(data);
-        setSavedViews(views);
-        setLoading(false);
+        try {
+            const [data, views] = await Promise.all([
+                getEnrichedTalentPool(),
+                getSavedViews()
+            ]);
+            setCandidates(data);
+            setSavedViews(views);
+        } catch (error) {
+            toast.error("Failed to load talent intelligence.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleClearFilters = () => {
+        setCurrentFilters({
+            location: 'All',
+            role: '',
+            minAvailability: 0,
+            minTenure: 0,
+            tags: [],
+            query: '',
+            isSilverMedalist: false,
+            readyForRevisit: false,
+            sourceType: 'All'
+        });
+        setSearchQuery('');
+        setAiInterpretation(null);
+        toast.info("Filters reset to default.");
     };
 
     const handleSearch = (val) => {
@@ -123,22 +158,30 @@ export default function TalentPool() {
                                 <Filter className="w-4 h-4 text-primary" />
                                 Smart Filters
                             </h3>
-                            <button className="text-[10px] font-black uppercase text-primary hover:underline">Clear All</button>
+                            <button
+                                onClick={handleClearFilters}
+                                className="text-[10px] font-black uppercase text-primary hover:text-primary/70 transition-colors"
+                            >
+                                Clear All
+                            </button>
                         </div>
                         <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
                             <section className="space-y-4">
                                 <h4 className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground opacity-60">Base Dimensions</h4>
                                 <div className="space-y-3">
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Location Radius</label>
+                                    <div className="space-y-1.5 pt-4 border-t border-border/30">
+                                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Sourcing Channel</label>
                                         <select
-                                            value={currentFilters.location}
-                                            onChange={(e) => setCurrentFilters(prev => ({ ...prev, location: e.target.value }))}
-                                            className="w-full bg-muted/50 border border-border/50 rounded-lg px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                            value={currentFilters.sourceType}
+                                            onChange={(e) => setCurrentFilters(prev => ({ ...prev, sourceType: e.target.value }))}
+                                            className="w-full bg-muted/50 border border-border/50 rounded-lg px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
                                         >
-                                            <option value="All">All Locations</option>
-                                            <option value="San Francisco, CA">Within 50 miles of SF</option>
-                                            <option value="Remote">Remote (Worldwide)</option>
+                                            <option value="All">All Channels</option>
+                                            <option value="LinkedIn">LinkedIn</option>
+                                            <option value="Referral">Referral</option>
+                                            <option value="Alumni">Alumni Database</option>
+                                            <option value="Niche Community">Niche Community</option>
+                                            <option value="GitHub">GitHub</option>
                                         </select>
                                     </div>
                                     <div className="space-y-1.5">
@@ -149,16 +192,26 @@ export default function TalentPool() {
                             </section>
 
                             <section className="space-y-4">
-                                <h4 className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground opacity-60">Intelligence & Scores</h4>
+                                <h4 className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground opacity-60">Strategic Intelligence</h4>
                                 <div className="space-y-3">
-                                    {['High Match (90%+)', 'Ghosting Risk', 'Active Seekers', 'Silver Medalists'].map(filter => (
-                                        <label key={filter} className="flex items-center gap-2 group cursor-pointer">
-                                            <div className="w-4 h-4 rounded border border-border group-hover:border-primary transition-colors flex items-center justify-center">
-                                                <div className="w-2 h-2 bg-primary rounded-sm hidden group-hover:block opacity-20" />
-                                            </div>
-                                            <span className="text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors">{filter}</span>
-                                        </label>
-                                    ))}
+                                    <label className="flex items-center gap-2 group cursor-pointer">
+                                        <button
+                                            onClick={() => setCurrentFilters(prev => ({ ...prev, isSilverMedalist: !prev.isSilverMedalist }))}
+                                            className={`w-4 h-4 rounded border transition-all flex items-center justify-center ${currentFilters.isSilverMedalist ? 'border-amber-500 bg-amber-500' : 'border-border group-hover:border-primary'}`}
+                                        >
+                                            {currentFilters.isSilverMedalist && <CheckSquare className="w-3 h-3 text-white" />}
+                                        </button>
+                                        <span className={`text-xs font-bold transition-colors ${currentFilters.isSilverMedalist ? 'text-amber-600' : 'text-muted-foreground'}`}>Silver Medalists</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 group cursor-pointer">
+                                        <button
+                                            onClick={() => setCurrentFilters(prev => ({ ...prev, readyForRevisit: !prev.readyForRevisit }))}
+                                            className={`w-4 h-4 rounded border transition-all flex items-center justify-center ${currentFilters.readyForRevisit ? 'border-primary bg-primary' : 'border-border group-hover:border-primary'}`}
+                                        >
+                                            {currentFilters.readyForRevisit && <CheckSquare className="w-3 h-3 text-white" />}
+                                        </button>
+                                        <span className={`text-xs font-bold transition-colors ${currentFilters.readyForRevisit ? 'text-primary' : 'text-foreground'}`}>Quarterly Revisit (90d+)</span>
+                                    </label>
                                 </div>
                             </section>
 
@@ -189,8 +242,13 @@ export default function TalentPool() {
                                 placeholder="Find senior engineers in fintech who might be open to moving..."
                                 value={searchQuery}
                                 onChange={(e) => handleSearch(e.target.value)}
-                                className="w-full bg-white border border-border/50 rounded-[1.25rem] pl-11 pr-4 py-4 text-sm font-bold shadow-xl shadow-black/5 outline-none focus:ring-4 focus:ring-primary/10 transition-all"
+                                className="w-full bg-card border border-border/50 rounded-[1.25rem] pl-11 pr-12 py-4 text-sm font-bold shadow-sm outline-none focus:ring-4 focus:ring-primary/10 transition-all text-foreground"
                             />
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                <Tooltip text="Use Boolean: (React OR Vue) AND Node NOT Python">
+                                    <Info className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors cursor-help" />
+                                </Tooltip>
+                            </div>
                             {aiInterpretation && (
                                 <motion.div
                                     initial={{ opacity: 0, y: -10 }}
@@ -205,27 +263,30 @@ export default function TalentPool() {
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                                className={`p-4 rounded-2xl border transition-all active:scale-95 ${isFilterOpen ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' : 'bg-white border-border/50 hover:border-primary/50'}`}
+                                className={`p-4 rounded-2xl border transition-all active:scale-95 ${isFilterOpen ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' : 'bg-card border-border/50 hover:border-primary/50'}`}
                             >
                                 <Filter className="w-5 h-5" />
                             </button>
                             <button
                                 onClick={() => alert(`Found ${scanForDuplicates(candidates).length} potential duplicates.`)}
-                                className="p-4 bg-white border border-border/50 rounded-2xl text-muted-foreground hover:border-primary/50 hover:text-primary transition-all active:scale-95"
+                                className="p-4 bg-card border border-border/50 rounded-2xl text-muted-foreground hover:border-primary/50 hover:text-primary transition-all active:scale-95"
                                 title="Scan for Duplicates"
                             >
                                 <ScanLine className="w-5 h-5" />
                             </button>
-                            <button className="flex items-center gap-2 p-4 bg-white border border-border/50 rounded-2xl font-black text-sm hover:border-primary/50 transition-all active:scale-95">
+                            <button
+                                onClick={() => toast.success("Exporting analysis to CSV...")}
+                                className="flex items-center gap-2 p-4 bg-card border border-border/50 rounded-2xl font-black text-sm hover:border-primary/50 transition-all active:scale-95 text-foreground"
+                            >
                                 <Download className="w-5 h-5" />
                                 <span className="hidden lg:inline">Export Analysis</span>
                             </button>
                             {/* Saved Views Dropdown Mock */}
                             <div className="relative group">
-                                <button className="p-4 bg-white border border-border/50 rounded-2xl text-muted-foreground hover:border-primary/50 hover:text-primary transition-all">
+                                <button className="p-4 bg-card border border-border/50 rounded-2xl text-muted-foreground hover:border-primary/50 hover:text-primary transition-all">
                                     <BookMarked className="w-5 h-5" />
                                 </button>
-                                <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-border rounded-xl shadow-xl p-2 hidden group-hover:block z-50">
+                                <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-xl shadow-xl p-2 hidden group-hover:block z-50">
                                     <div className="text-[10px] font-black uppercase text-muted-foreground px-2 py-1">Saved Views</div>
                                     {savedViews.map(sv => (
                                         <button
@@ -257,7 +318,7 @@ export default function TalentPool() {
                                 initial={{ opacity: 0, y: -20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
-                                className="bg-black text-white p-4 rounded-[1.5rem] flex items-center justify-between shadow-2xl"
+                                className="bg-foreground text-background p-4 rounded-[1.5rem] flex items-center justify-between shadow-2xl"
                             >
                                 <div className="flex items-center gap-6 px-4">
                                     <div className="flex items-center gap-2">
@@ -271,9 +332,28 @@ export default function TalentPool() {
                                     <div className="text-[10px] font-bold text-white/60">GHOSTING RISK: <span className="text-red-400">Low</span></div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Send Campaign</button>
-                                    <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Bulk Tag</button>
-                                    <div className="p-2 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all cursor-pointer">
+                                    <button
+                                        onClick={() => setShowComparison(true)}
+                                        className="px-4 py-2 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 hover:scale-105"
+                                    >
+                                        Bench Candidates
+                                    </button>
+                                    <button
+                                        onClick={() => toast.success(`Campaign sent to ${selectedIds.length} candidates.`)}
+                                        className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                    >
+                                        Direct Outreach
+                                    </button>
+                                    <button
+                                        onClick={() => toast.info("Bulk tagging interface initialized.")}
+                                        className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                    >
+                                        Bulk Tag
+                                    </button>
+                                    <div
+                                        onClick={() => toast.error("Bulk delete action restricted.")}
+                                        className="p-2 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all cursor-pointer"
+                                    >
                                         <Trash2 className="w-4 h-4" />
                                     </div>
                                     <button
@@ -292,7 +372,7 @@ export default function TalentPool() {
                 <section className="flex-1 glass-card overflow-hidden flex flex-col relative">
                     <div className="flex-1 overflow-auto no-scrollbar">
                         <table className="w-full text-left border-collapse min-w-[1000px]">
-                            <thead className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-border/50">
+                            <thead className="sticky top-0 z-20 bg-card/80 backdrop-blur-md border-b border-border/50">
                                 <tr>
                                     <th className="p-4 w-12">
                                         <button onClick={toggleSelectAll} className="text-muted-foreground hover:text-primary transition-colors">
@@ -301,9 +381,9 @@ export default function TalentPool() {
                                     </th>
                                     <th className="p-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Candidate Profile</th>
                                     <th className="p-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Match Score</th>
+                                    <th className="p-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Source</th>
                                     <th className="p-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Availability</th>
-                                    <th className="p-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Last Contact</th>
-                                    <th className="p-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Stage</th>
+                                    <th className="p-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Insights</th>
                                     <th className="p-4 w-20"></th>
                                 </tr>
                             </thead>
@@ -368,6 +448,12 @@ export default function TalentPool() {
                                             </div>
                                         </td>
                                         <td className="p-4">
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="text-[10px] font-black text-foreground uppercase tracking-wider">{candidate.sourceType}</span>
+                                                <span className="text-[8px] font-bold text-muted-foreground uppercase opacity-60">{candidate.sourceChannel}</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
                                             <div className="flex flex-col gap-1">
                                                 <div className="flex items-center gap-2">
                                                     <span className={`text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-md ${candidate.availabilityScore >= 70 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
@@ -375,36 +461,59 @@ export default function TalentPool() {
                                                     </span>
                                                     <span className="text-xs font-bold text-muted-foreground">{candidate.availabilityScore}%</span>
                                                 </div>
-                                                <p className="text-[8px] font-bold text-muted-foreground uppercase opacity-60">Tenure: {candidate.tenureMonths} mo</p>
                                             </div>
                                         </td>
                                         <td className="p-4">
-                                            <div className="flex flex-col gap-0.5">
-                                                <div className="text-[10px] font-black text-foreground">
-                                                    {new Date(candidate.lastContactedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                                </div>
-                                                <div className="text-[8px] font-bold text-muted-foreground uppercase flex items-center gap-1">
-                                                    <Mail className="w-2.5 h-2.5" />
-                                                    {candidate.responseRate}% Response
+                                            <div className="flex gap-1">
+                                                {candidate.isSilverMedalist && (
+                                                    <div className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 text-[8px] font-black uppercase border border-amber-100">Silver</div>
+                                                )}
+                                                {candidate.rejectionDate && (new Date() - new Date(candidate.rejectionDate)) / (1000 * 60 * 60 * 24) > 90 && (
+                                                    <div className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 text-[8px] font-black uppercase border border-blue-100">Revisit</div>
+                                                )}
+                                                <div className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[8px] font-black uppercase border border-border/50">
+                                                    {candidate.stage}
                                                 </div>
                                             </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <span className="px-2.5 py-1 rounded-lg bg-muted text-[10px] font-black uppercase tracking-widest text-muted-foreground border border-border/50">
-                                                {candidate.stage}
-                                            </span>
                                         </td>
                                         <td className="p-4">
                                             {/* 1. Quick Action Hover Bar */}
                                             <div className="opacity-0 group-hover:opacity-100 transition-all flex items-center justify-end gap-1">
-                                                <Tooltip text="Direct Email">
-                                                    <button className="p-2 bg-white border border-border/50 rounded-lg hover:border-primary hover:text-primary transition-all shadow-sm">
+                                                <Tooltip text="Strategic Outreach Protocol">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setActiveCandidate(candidate); setShowOutreach(true); }}
+                                                        className="p-2 bg-white border border-border/50 rounded-lg hover:border-primary hover:text-primary transition-all shadow-sm"
+                                                    >
                                                         <Mail className="w-4 h-4" />
+                                                    </button>
+                                                </Tooltip>
+                                                <Tooltip text="Constructive Feedback SLA">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setActiveCandidate(candidate); setShowFeedback(true); }}
+                                                        className="p-2 bg-white border border-border/50 rounded-lg hover:border-red-500 hover:text-red-500 transition-all shadow-sm group/btn"
+                                                    >
+                                                        <MessageSquare className="w-4 h-4" />
                                                     </button>
                                                 </Tooltip>
                                                 <Tooltip text="InMail">
                                                     <button className="p-2 bg-white border border-border/50 rounded-lg hover:border-blue-600 hover:text-blue-600 transition-all shadow-sm">
                                                         <LinkIcon className="w-4 h-4" />
+                                                    </button>
+                                                </Tooltip>
+                                                <Tooltip text="Interview Scorecard">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setActiveCandidate(candidate); setShowScorecard(true); }}
+                                                        className="p-2 bg-white border border-border/50 rounded-lg hover:border-amber-500 hover:text-amber-500 transition-all shadow-sm"
+                                                    >
+                                                        <BarChart3 className="w-4 h-4" />
+                                                    </button>
+                                                </Tooltip>
+                                                <Tooltip text="Strategic Offer Protocol">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setActiveCandidate(candidate); setShowOffer(true); }}
+                                                        className="p-2 bg-white border border-border/50 rounded-lg hover:border-black hover:bg-black hover:text-white transition-all shadow-sm"
+                                                    >
+                                                        <Rocket className="w-4 h-4" />
                                                     </button>
                                                 </Tooltip>
                                                 <button className="p-2 bg-white border border-border/50 rounded-lg hover:bg-muted transition-all shadow-sm">
@@ -452,6 +561,46 @@ export default function TalentPool() {
                 </section>
             </main>
 
+            {/* Outreach Generator Modal */}
+            <AnimatePresence>
+                {showOutreach && (
+                    <OutreachGenerator
+                        candidate={activeCandidate}
+                        onClose={() => setShowOutreach(false)}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Feedback Generator Modal */}
+            <AnimatePresence>
+                {showFeedback && (
+                    <FeedbackGenerator
+                        candidate={activeCandidate}
+                        onClose={() => setShowFeedback(false)}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Interview Scorecard Modal */}
+            <AnimatePresence>
+                {showScorecard && (
+                    <InterviewScorecard
+                        candidate={activeCandidate}
+                        onClose={() => setShowScorecard(false)}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Offer Generator Modal */}
+            <AnimatePresence>
+                {showOffer && (
+                    <OfferGenerator
+                        candidate={activeCandidate}
+                        onClose={() => setShowOffer(false)}
+                    />
+                )}
+            </AnimatePresence>
+
             {/* Profile Sidebar */}
             <AnimatePresence>
                 {selectedCandidate && (
@@ -468,6 +617,16 @@ export default function TalentPool() {
                             onClose={() => setSelectedCandidate(null)}
                         />
                     </>
+                )}
+            </AnimatePresence>
+
+            {/* Comparison Bench Modal */}
+            <AnimatePresence>
+                {showComparison && (
+                    <ComparisonBench
+                        candidates={candidates.filter(c => selectedIds.includes(c.id))}
+                        onClose={() => setShowComparison(false)}
+                    />
                 )}
             </AnimatePresence>
         </div>

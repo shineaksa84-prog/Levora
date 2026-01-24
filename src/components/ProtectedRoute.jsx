@@ -18,7 +18,7 @@ export function ProtectedRoute({ children, allowedRoles }) {
         return <Navigate to="/login" replace />;
     }
 
-    if (allowedRoles && !allowedRoles.includes(user.role)) {
+    if (allowedRoles && (!user.role || !allowedRoles.includes(user.role))) {
         return (
             <div className="flex items-center justify-center h-full">
                 <div className="text-center p-8 bg-card border border-border rounded-xl">

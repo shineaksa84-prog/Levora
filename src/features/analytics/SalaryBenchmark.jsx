@@ -1,28 +1,21 @@
 import { useState, useEffect } from 'react';
 import { BarChart3, TrendingUp, Info, Loader2 } from 'lucide-react';
-import { getInternalSalaryStats } from '../../lib/services/analyticsService';
+import { getInternalSalaryStats, getMarketSalaryBenchmarks } from '../../lib/services/analyticsService';
 
 export default function SalaryBenchmark() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Semi-static market data for 2024
-    const MARKET_DATA = {
-        'SDE I': 1400000,
-        'SDE II': 2200000,
-        'Product Manager': 2500000,
-        'Designer': 1000000,
-        'Senior Software Engineer': 3200000,
-        'HR Manager': 1500000
-    };
-
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const internalStats = await getInternalSalaryStats();
+                const [internalStats, marketData] = await Promise.all([
+                    getInternalSalaryStats(),
+                    getMarketSalaryBenchmarks()
+                ]);
                 const combined = internalStats.map(item => {
-                    const market = MARKET_DATA[item.role] || 1500000;
+                    const market = marketData[item.role] || 1500000;
                     const gap = Math.round(((item.internalAverage - market) / market) * 100);
                     return {
                         role: item.role,
@@ -40,6 +33,7 @@ export default function SalaryBenchmark() {
         };
         fetchData();
     }, []);
+
 
     const formatK = (val) => `₹${(val / 100000).toFixed(1)}L`;
 

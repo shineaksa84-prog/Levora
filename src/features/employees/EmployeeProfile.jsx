@@ -1,9 +1,13 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, Building, Award } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, Building, Award, Target, Wallet } from 'lucide-react';
 import LifecycleDashboard from './LifecycleDashboard';
+import OKRManager from '../performance/OKRManager';
+import VariablePay from '../compensation/VariablePay';
 
 export default function EmployeeProfile() {
     const { id } = useParams();
+    const [activeTab, setActiveTab] = useState('performance');
 
     // Mock data
     const employee = {
@@ -18,6 +22,15 @@ export default function EmployeeProfile() {
         id: 'EMP-2023-042'
     };
 
+    const TABS = [
+        { id: 'performance', label: 'Performance', icon: Target },
+        { id: 'compensation', label: 'Compensation', icon: Wallet }
+    ];
+
+    const handleEditProfile = () => {
+        alert('Universal Profile Editor protocol initiated.');
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -27,7 +40,10 @@ export default function EmployeeProfile() {
                     Back to Employees
                 </Link>
                 <div className="flex gap-2">
-                    <button className="px-4 py-2 bg-card border border-border rounded-md text-sm font-medium hover:bg-accent transition-colors">
+                    <button
+                        onClick={handleEditProfile}
+                        className="px-4 py-2 bg-card border border-border rounded-md text-sm font-medium hover:bg-accent transition-colors"
+                    >
                         Edit Profile
                     </button>
                     <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
@@ -91,9 +107,29 @@ export default function EmployeeProfile() {
                 <div className="lg:col-span-2 space-y-6">
                     <LifecycleDashboard />
 
-                    {/* Placeholder for other tabs like Performance, Compensation */}
-                    <div className="bg-card border border-border rounded-xl p-6 shadow-sm min-h-[200px] flex items-center justify-center text-muted-foreground">
-                        <p>Performance Reviews & Compensation History coming soon...</p>
+                    <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                        <div className="flex border-b border-border bg-muted/20">
+                            {TABS.map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-2 px-6 py-4 text-xs font-black uppercase tracking-widest transition-all relative ${activeTab === tab.id
+                                            ? 'text-primary bg-background'
+                                            : 'text-muted-foreground hover:bg-muted/50'
+                                        }`}
+                                >
+                                    <tab.icon className="w-4 h-4" />
+                                    {tab.label}
+                                    {activeTab === tab.id && (
+                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="p-6">
+                            {activeTab === 'performance' && <OKRManager />}
+                            {activeTab === 'compensation' && <VariablePay />}
+                        </div>
                     </div>
                 </div>
             </div>

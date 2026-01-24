@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, MoreVertical, Paperclip, Mic } from 'lucide-react';
+import { Send, Bot, User, Sparkles, MoreVertical, Paperclip, Mic, Mail, BarChart3, Users, Zap, Hash, Globe, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { geminiService } from '../../lib/ai/gemini';
 
@@ -8,10 +8,17 @@ export default function HRAssistant() {
         {
             id: 1,
             type: 'bot',
-            content: 'Hello! I\'m your AI HR Assistant. I can help you with drafting job descriptions, screening candidates, analyzing salary data, and more. How can I assist you today?',
+            content: "Welcome to the Strategic Command Center. I've integrated the new Talent Benchmarking and AI Outreach protocols. \n\nI can help you analyze market salary data, generate personalized outreach for the 'Alice Freeman' search, or run a side-by-side comparison of your short-listed silver medalists.",
             timestamp: new Date().toISOString()
         }
     ]);
+    const [activeMode, setActiveMode] = useState('chat'); // chat, benchmarking, outreach
+    const [marketStats, setMarketStats] = useState({
+        avgSalary: '$145k',
+        demandLevel: 'Critically High',
+        competitorVelocity: 'Top 5%',
+        topSkills: ['React', 'Next.js', 'System Design']
+    });
     const [inputValue, setInputValue] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef(null);
@@ -41,33 +48,58 @@ export default function HRAssistant() {
         setIsTyping(true);
 
         try {
-            const response = await geminiService.chat(text, messages);
+            // Get current chat history for context (excluding this newest message)
+            const history = messages.map(m => ({
+                role: m.type === 'bot' ? 'model' : 'user',
+                parts: [{ text: m.content }]
+            }));
+
+            const response = await geminiService.chat(text, history);
+
+            // Intelligence for rich data triggers based on response content
+            let richData = null;
+            if (response.toLowerCase().includes('outreach') || response.toLowerCase().includes('sequence')) {
+                richData = {
+                    type: 'outreach',
+                    preview: "Hi [Candidate], I noticed your work on the system architecture... we're scaling our core framework and your expertise is exactly what we need."
+                };
+            } else if (response.toLowerCase().includes('benchmark') || response.toLowerCase().includes('compare')) {
+                richData = {
+                    type: 'benchmark',
+                    comparison: [
+                        { name: 'Selected Candidate A', match: 94, risk: 'Low' },
+                        { name: 'Selected Candidate B', match: 88, risk: 'Medium' }
+                    ]
+                };
+            }
+
             const botResponse = {
                 id: Date.now() + 1,
                 type: 'bot',
-                content: response.content,
-                timestamp: response.timestamp
+                content: response,
+                richData,
+                timestamp: new Date().toISOString()
             };
             setMessages(prev => [...prev, botResponse]);
         } catch (error) {
-            console.error("Error getting AI response:", error);
-            const errorResponse = {
-                id: Date.now() + 2,
+            console.error('HR Assistant Error:', error);
+            const errorMsg = {
+                id: Date.now() + 1,
                 type: 'bot',
-                content: "I'm having trouble connecting right now. Let's try that again in a moment.",
+                content: "I apologize, my neural link is temporarily disrupted. Please try our query again in a moment.",
                 timestamp: new Date().toISOString()
             };
-            setMessages(prev => [...prev, errorResponse]);
+            setMessages(prev => [...prev, errorMsg]);
         } finally {
             setIsTyping(false);
         }
     };
 
     const suggestions = [
-        "Draft a Senior React Developer job description",
-        "Analyze Q3 hiring metrics",
-        "Schedule interviews for candidate #1234",
-        "Generate an offer letter template"
+        "Generate outreach for Senior React devs",
+        "Bench candidates Alice vs. Bob",
+        "Market Pulse: Senior Dev salary in NY",
+        "Summarize feedback for the Engineering lead role"
     ];
 
     return (
@@ -111,6 +143,34 @@ export default function HRAssistant() {
                                         : 'bg-white border border-slate-100 rounded-tl-none'
                                         }`}>
                                         <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                                        {message.richData?.type === 'outreach' && (
+                                            <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3">
+                                                <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest">
+                                                    <Mail className="w-3 h-3" /> Outreach Draft
+                                                </div>
+                                                <p className="text-xs font-medium text-slate-700 italic">"{message.richData.preview}"</p>
+                                                <button className="w-full py-2 bg-primary text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/10">Apply Outreach Protocol</button>
+                                            </div>
+                                        )}
+                                        {message.richData?.type === 'benchmark' && (
+                                            <div className="mt-4 p-4 bg-slate-900 rounded-xl space-y-3 text-white">
+                                                <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest">
+                                                    <BarChart3 className="w-3 h-3" /> Benchmark Summary
+                                                </div>
+                                                <div className="space-y-2">
+                                                    {message.richData.comparison.map(c => (
+                                                        <div key={c.name} className="flex items-center justify-between">
+                                                            <span className="text-xs font-bold">{c.name}</span>
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-[10px] font-black text-primary">{c.match}% Match</span>
+                                                                <span className={`text-[8px] px-1.5 py-0.5 rounded font-black uppercase ${c.risk === 'Low' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>{c.risk} Risk</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <button className="w-full py-2 bg-white/10 hover:bg-white/20 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">Launch Full Comparison Bench</button>
+                                            </div>
+                                        )}
                                     </div>
                                     <span className="text-[10px] uppercase font-bold text-slate-400 mt-2 px-1 tracking-widest">
                                         {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -196,15 +256,56 @@ export default function HRAssistant() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="bg-slate-900 rounded-2xl p-5 text-white"
+                    className="bg-slate-900 rounded-2xl p-5 text-white overflow-hidden relative"
                 >
-                    <h3 className="font-bold mb-2 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-indigo-400" />
-                        AI Analysis
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <Zap className="w-12 h-12 text-primary" />
+                    </div>
+                    <h3 className="font-bold mb-4 flex items-center gap-2 text-sm">
+                        <Zap className="w-4 h-4 text-primary" />
+                        Market Pulse Intelligence
                     </h3>
-                    <p className="text-xs text-slate-400 leading-relaxed">
-                        I can analyze resumes, draft personalized offer letters, and even predict hiring velocity based on your pipeline.
-                    </p>
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <p className="text-[10px] uppercase font-black text-slate-400">Avg. Market Rate</p>
+                                <p className="text-lg font-black">{marketStats.avgSalary}</p>
+                            </div>
+                            <TrendingUp className="w-5 h-5 text-green-400" />
+                        </div>
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-[10px] font-bold">
+                                <span>Demand Density</span>
+                                <span className="text-primary">{marketStats.demandLevel}</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-primary w-[85%]" />
+                            </div>
+                        </div>
+                        <div className="pt-4 border-t border-slate-800">
+                            <p className="text-[10px] uppercase font-black text-slate-400 mb-2">High-Velocity Skills</p>
+                            <div className="flex flex-wrap gap-2">
+                                {marketStats.topSkills.map(s => (
+                                    <span key={s} className="px-2 py-1 bg-white/5 rounded-lg text-[10px] font-bold border border-white/10">{s}</span>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="glass-card p-5"
+                >
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
+                        <Users className="w-4 h-4 text-blue-500" />
+                        Active Selection
+                    </h3>
+                    <div className="p-3 bg-muted/20 rounded-xl border border-border border-dashed text-center">
+                        <p className="text-[10px] font-medium text-muted-foreground">Select candidates from the Talent Pool to run AI benchmarking or outreach campaigns.</p>
+                    </div>
                 </motion.div>
             </div>
         </div>

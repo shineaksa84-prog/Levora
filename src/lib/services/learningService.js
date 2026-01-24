@@ -224,34 +224,63 @@ export async function identifySkillGaps(employeeId, targetRole) {
 /**
  * Get learning paths
  */
+/**
+ * Get learning paths (Expanded with Module Detail)
+ */
+let MOCK_PATHS = [
+    {
+        id: 'path_1',
+        title: 'Senior Frontend Engineer Track',
+        description: 'Master the skills required to move to the next level.',
+        role: 'Senior Engineer',
+        duration: '22 Hours',
+        progress: 35,
+        modules: [
+            { id: 1, title: 'Advanced React Patterns', duration: '4h', status: 'Completed' },
+            { id: 2, title: 'State Management at Scale', duration: '3h', status: 'In Progress' },
+            { id: 3, title: 'Web Performance Optimization', duration: '5h', status: 'Locked' },
+            { id: 4, title: 'Testing & QA Strategies', duration: '4h', status: 'Locked' },
+            { id: 5, title: 'System Design for Frontend', duration: '6h', status: 'Locked' },
+        ],
+        level: 'Advanced',
+        enrollments: 120,
+        completions: 45
+    }
+];
+
 export async function getLearningPaths(filters = {}) {
-    // Mock data
-    return [
-        {
-            id: 'path_1',
-            title: 'HR Analytics Professional',
-            description: 'Complete path to become an HR analytics expert',
-            role: 'HR Analyst',
-            duration: '6 months',
-            courses: ['course_1', 'course_30', 'course_31'],
-            skills: ['Data Analysis', 'HR Metrics', 'Predictive Analytics', 'Power BI'],
-            level: 'Intermediate to Advanced',
-            enrollments: 23,
-            completions: 8
-        },
-        {
-            id: 'path_2',
-            title: 'Recruitment Specialist',
-            description: 'Master modern recruitment techniques and tools',
-            role: 'Recruiter',
-            duration: '3 months',
-            courses: ['course_3', 'course_10', 'course_11'],
-            skills: ['Recruitment', 'AI Tools', 'Candidate Assessment', 'Employer Branding'],
-            level: 'Beginner to Intermediate',
-            enrollments: 45,
-            completions: 18
-        }
-    ];
+    return Promise.resolve(MOCK_PATHS);
+}
+
+export async function startModule(pathId, moduleId) {
+    const path = MOCK_PATHS.find(p => p.id === pathId);
+    if (!path) return;
+
+    path.modules = path.modules.map(m =>
+        m.id === moduleId ? { ...m, status: 'In Progress' } : m
+    );
+    return Promise.resolve(path);
+}
+
+export async function completeModule(pathId, moduleId) {
+    const path = MOCK_PATHS.find(p => p.id === pathId);
+    if (!path) return;
+
+    path.modules = path.modules.map(m =>
+        m.id === moduleId ? { ...m, status: 'Completed' } : m
+    );
+
+    // Auto-unlock next module
+    const currentIndex = path.modules.findIndex(m => m.id === moduleId);
+    if (currentIndex < path.modules.length - 1) {
+        path.modules[currentIndex + 1].status = 'In Progress'; // Or 'Unlocked' if you prefer manual start
+    }
+
+    // Recalculate progress
+    const completed = path.modules.filter(m => m.status === 'Completed').length;
+    path.progress = Math.round((completed / path.modules.length) * 100);
+
+    return Promise.resolve(path);
 }
 
 /**
@@ -316,5 +345,7 @@ export default {
     identifySkillGaps,
     getLearningPaths,
     getPersonalizedRecommendations,
-    getTeamSkillsOverview
+    getTeamSkillsOverview,
+    startModule,
+    completeModule
 };

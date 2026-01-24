@@ -9,7 +9,14 @@ import {
     ChevronRight,
     Plus
 } from 'lucide-react';
-import { approveResignation, getOffboardingChecklist, updateChecklistTask, getResignations } from '../../lib/services/resignationService';
+import {
+    approveResignation,
+    getOffboardingChecklist,
+    updateChecklistTask,
+    getResignations,
+    submitResignation,
+    getResignationStats
+} from '../../lib/services/resignationService';
 import OffboardingChecklist from './OffboardingChecklist';
 
 export default function Resignation() {
@@ -17,16 +24,32 @@ export default function Resignation() {
     const [selectedResignation, setSelectedResignation] = useState(null);
     const [checklist, setChecklist] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [showSubmitModal, setShowSubmitModal] = useState(false);
+    const [stats, setStats] = useState({ pending: 0, thisYear: 0, notice: 0 });
 
     useEffect(() => {
-        const fetchResignations = async () => {
-            setLoading(true);
-            const data = await getResignations();
-            setResignations(data);
-            setLoading(false);
-        };
-        fetchResignations();
+        fetchData();
     }, []);
+
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const [data, s] = await Promise.all([
+                getResignations(),
+                getResignationStats()
+            ]);
+            setResignations(data);
+            setStats({
+                pending: s.pending,
+                thisYear: s.thisYear,
+                notice: data.filter(r => r.status === 'Approved').length
+            });
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleApprove = async (resignationId) => {
         setLoading(true);
@@ -118,7 +141,7 @@ export default function Resignation() {
                             </div>
                         </div>
                         <h3 className="text-muted-foreground text-sm font-medium">Pending Requests</h3>
-                        <p className="text-2xl font-bold mt-1">1</p>
+                        <p className="text-2xl font-bold mt-1">{stats.pending}</p>
                     </div>
                     <div className="bg-card border border-border rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
@@ -127,7 +150,7 @@ export default function Resignation() {
                             </div>
                         </div>
                         <h3 className="text-muted-foreground text-sm font-medium">Notice Period</h3>
-                        <p className="text-2xl font-bold mt-1">2</p>
+                        <p className="text-2xl font-bold mt-1">{stats.notice}</p>
                         <p className="text-xs text-muted-foreground mt-2">Employees serving notice</p>
                     </div>
                     <div className="bg-card border border-border rounded-xl p-6">
@@ -137,7 +160,7 @@ export default function Resignation() {
                             </div>
                         </div>
                         <h3 className="text-muted-foreground text-sm font-medium">Completed Exits</h3>
-                        <p className="text-2xl font-bold mt-1">12</p>
+                        <p className="text-2xl font-bold mt-1">{stats.thisYear}</p>
                         <p className="text-xs text-muted-foreground mt-2">This year</p>
                     </div>
                 </div>
@@ -146,7 +169,10 @@ export default function Resignation() {
             <div className="bg-card border border-border rounded-xl overflow-hidden">
                 <div className="p-6 border-b border-border flex justify-between items-center">
                     <h2 className="text-lg font-semibold">Resignation Requests</h2>
-                    <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2">
+                    <button
+                        onClick={() => setShowSubmitModal(true)}
+                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
+                    >
                         <Plus className="w-4 h-4" />
                         Submit Resignation
                     </button>
@@ -203,6 +229,115 @@ export default function Resignation() {
                         </div>
                     ))}
                 </div>
+            </div>
+            {showSubmitModal && (
+                <SubmitResignationModal
+                    onClose={() => setShowSubmitModal(false)}
+                    onSuccess={() => {
+                        setShowSubmitModal(false);
+                        fetchData();
+                    }}
+                />
+            )}
+        </div>
+    );
+}
+
+function SubmitResignationModal({ onClose, onSuccess }) {
+    const [formData, setFormData] = useState({
+        employee: 'Current User', // Mock
+        employeeId: 'EMP-001',
+        role: 'Senior Developer',
+        department: 'Engineering',
+        lastDay: '',
+        reason: 'Better Opportunity',
+        reasonDetails: ''
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            await submitResignation(formData);
+            onSuccess();
+        } catch (error) {
+            console.error(error);
+            alert('Failed to submit resignation protocol.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="bg-primary p-6 text-white flex justify-between items-center">
+                    <div>
+                        <h3 className="text-xl font-bold tracking-tight">Post Resignation Protocol</h3>
+                        <p className="text-[10px] font-medium uppercase tracking-widest opacity-80">Offboarding Initiation Module</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-gray-500 uppercase ml-1">Last Working Day</label>
+                            <input
+                                type="date"
+                                required
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 font-bold text-sm outline-none"
+                                value={formData.lastDay}
+                                onChange={e => setFormData({ ...formData, lastDay: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-gray-500 uppercase ml-1">Reason Category</label>
+                            <select
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 font-bold text-sm outline-none"
+                                value={formData.reason}
+                                onChange={e => setFormData({ ...formData, reason: e.target.value })}
+                            >
+                                <option>Better Opportunity</option>
+                                <option>Personal Reasons</option>
+                                <option>Relocation</option>
+                                <option>Higher Studies</option>
+                                <option>Career Change</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-500 uppercase ml-1">Explanatory Notes</label>
+                        <textarea
+                            rows={3}
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 font-medium text-sm outline-none resize-none focus:bg-white transition-all"
+                            placeholder="Please provide additional context for your departure..."
+                            value={formData.reasonDetails}
+                            onChange={e => setFormData({ ...formData, reasonDetails: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex gap-3 text-amber-800 text-xs">
+                        <Clock className="w-4 h-4 shrink-0 mt-0.5" />
+                        <p>
+                            <span className="font-black">Notice Period:</span> Your submission will initiate a 60-day notice period sequence as per institutional protocols.
+                        </p>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full bg-primary text-primary-foreground py-4 rounded-xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                    >
+                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                        Submit Resignation
+                    </button>
+                </form>
             </div>
         </div>
     );

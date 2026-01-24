@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Search, TrendingUp, DollarSign, MapPin, Briefcase, Loader2 } from 'lucide-react';
+import { geminiService } from '../../lib/ai/gemini';
 
 export default function SalaryInsights() {
     const [search, setSearch] = useState({ role: '', location: '' });

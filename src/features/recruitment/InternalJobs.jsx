@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Briefcase, MapPin, Clock, ArrowRight, CheckCircle2, UserPlus, X, Loader2 } from 'lucide-react';
 import { submitReferral, getMyReferrals } from '../../lib/services/referralService';
+import { toast } from '../../lib/services/toastService';
 
 const JOBS = [
     { id: 1, title: 'Senior Product Manager', dept: 'Product', location: 'Bangalore', type: 'Full-time', posted: '2 days ago' },
@@ -26,6 +27,7 @@ export default function InternalJobs() {
 
     const apply = (id) => {
         setApplied([...applied, id]);
+        toast.success('Interest registered. Internal mobility protocol initiated.');
     };
 
     const handleReferClick = (jobId) => {
@@ -36,7 +38,7 @@ export default function InternalJobs() {
     const handleReferralSuccess = (candidate) => {
         loadReferrals();
         setShowReferralModal(false);
-        // Toast or notification could go here
+        toast.success('Referral successfully committed to the talent bench.');
     };
 
     return (
@@ -139,7 +141,7 @@ export default function InternalJobs() {
                                         </div>
                                     </div>
                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${ref.status === 'Hired' ? 'bg-green-50 text-green-700 border-green-200' :
-                                            'bg-blue-50 text-blue-700 border-blue-200'
+                                        'bg-blue-50 text-blue-700 border-blue-200'
                                         }`}>
                                         {ref.stage || ref.status}
                                     </span>
@@ -180,7 +182,7 @@ function ReferralModal({ jobId, onClose, onSuccess, referrerId }) {
             await submitReferral(referrerId, formData, jobId);
             onSuccess();
         } catch (error) {
-            console.error(error);
+            toast.error('Strategic failure: Referral protocol could not be synchronized.');
         } finally {
             setLoading(false);
         }

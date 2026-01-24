@@ -14,68 +14,77 @@ export default function HolidayCalendarManager() {
     const filteredHolidays = filter === 'All' ? MOCK_HOLIDAYS : MOCK_HOLIDAYS.filter(h => h.location === filter || h.location === 'Global');
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
+        <div className="space-y-10 animate-in fade-in duration-700">
+            {/* Executive Hub Header */}
+            <div className="flex justify-between items-center bg-card border border-border p-8 rounded-[3rem] shadow-2xl relative overflow-hidden group">
+                <div className="absolute left-0 top-0 w-1 h-full bg-primary/20"></div>
                 <div>
-                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                        <MapPin className="w-5 h-5 text-pink-600" />
-                        Multi-Country Holiday Calendar
+                    <h2 className="text-2xl font-black text-foreground flex items-center gap-6 uppercase tracking-tighter">
+                        <div className="p-3 bg-primary/10 rounded-xl shadow-inner">
+                            <MapPin className="w-6 h-6 text-primary" />
+                        </div>
+                        Global Holiday <span className="text-primary italic">Orchestration</span>
                     </h2>
-                    <p className="text-sm text-gray-500">Manage statutory and optional holidays per region.</p>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-2 opacity-60">Statutory Compliance // Regional Vector Management</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-4 relative z-10">
                     <select
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
-                        className="border border-gray-300 rounded-lg text-sm px-3 py-2 bg-white"
+                        className="bg-background border border-border rounded-xl text-[10px] font-black uppercase tracking-widest px-6 py-3 cursor-pointer outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                     >
-                        <option value="All">All Locations</option>
-                        <option value="India">India</option>
-                        <option value="USA">USA</option>
-                        <option value="UAE">UAE</option>
+                        <option value="All">Institutional Vectors</option>
+                        <option value="India">IND Region</option>
+                        <option value="USA">USA Region</option>
+                        <option value="UAE">UAE Region</option>
                     </select>
-                    <button className="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-sm transition-colors">
-                        <Plus className="w-4 h-4" /> Add Holiday
+                    <button className="bg-primary text-primary-foreground px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20 group/btn relative overflow-hidden">
+                        <span className="relative z-10 flex items-center gap-3">
+                            <Plus className="w-4 h-4" /> Initialize Entry
+                        </span>
+                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300"></div>
                     </button>
                 </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-50 text-gray-500 font-bold uppercase text-xs">
+            {/* Institutional Matrix */}
+            <div className="bg-card border border-border rounded-[3rem] shadow-2xl overflow-hidden relative group">
+                <div className="absolute top-0 right-0 w-1 h-full bg-primary/20"></div>
+                <table className="w-full text-left">
+                    <thead className="bg-muted/50 border-b border-border">
                         <tr>
-                            <th className="px-6 py-4">Holiday Name</th>
-                            <th className="px-6 py-4">Date</th>
-                            <th className="px-6 py-4">Location</th>
-                            <th className="px-6 py-4">Type</th>
-                            <th className="px-6 py-4 text-right">Actions</th>
+                            <th className="px-10 py-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Institutional Designation</th>
+                            <th className="px-10 py-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Temporal Node</th>
+                            <th className="px-10 py-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Geographic Vector</th>
+                            <th className="px-10 py-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Protocol Type</th>
+                            <th className="px-10 py-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] text-right">Governance</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-border/30">
                         {filteredHolidays.map(holiday => (
-                            <tr key={holiday.id} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-6 py-4 font-bold text-gray-800">{holiday.name}</td>
-                                <td className="px-6 py-4 text-gray-600 font-medium">
-                                    <div className="flex items-center gap-2">
-                                        <Calendar className="w-4 h-4 text-gray-400" />
+                            <tr key={holiday.id} className="hover:bg-primary/[0.02] transition-colors group/row">
+                                <td className="px-10 py-8 font-black text-foreground text-sm uppercase tracking-tight">{holiday.name}</td>
+                                <td className="px-10 py-8">
+                                    <div className="flex items-center gap-3 text-primary font-black text-[11px] uppercase tracking-widest italic group-hover/row:translate-x-2 transition-transform">
+                                        <Calendar className="w-4 h-4 opacity-40" />
                                         {holiday.date}
                                     </div>
                                 </td>
-                                <td className="px-6 py-4">
-                                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${holiday.location === 'India' ? 'bg-orange-100 text-orange-700' :
-                                            holiday.location === 'USA' ? 'bg-blue-100 text-blue-700' :
-                                                'bg-gray-100 text-gray-700'
+                                <td className="px-10 py-8">
+                                    <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${holiday.location === 'Global' ? 'bg-foreground text-background border-white/10' :
+                                        holiday.location === 'India' ? 'bg-primary/10 text-primary border-primary/20' :
+                                            'bg-muted text-muted-foreground border-border'
                                         }`}>
                                         {holiday.location}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-gray-500">{holiday.type}</td>
-                                <td className="px-6 py-4 text-right flex justify-end gap-2">
-                                    <button className="p-1.5 text-gray-400 hover:text-indigo-600 bg-gray-50 hover:bg-indigo-50 rounded-lg transition-colors">
-                                        <Edit className="w-3.5 h-3.5" />
+                                <td className="px-10 py-8 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">{holiday.type}</td>
+                                <td className="px-10 py-8 text-right flex justify-end gap-3">
+                                    <button className="p-3 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all hover:scale-110">
+                                        <Edit className="w-4 h-4" />
                                     </button>
-                                    <button className="p-1.5 text-gray-400 hover:text-red-600 bg-gray-50 hover:bg-red-50 rounded-lg transition-colors">
-                                        <Trash2 className="w-3.5 h-3.5" />
+                                    <button className="p-3 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all hover:scale-110">
+                                        <Trash2 className="w-4 h-4" />
                                     </button>
                                 </td>
                             </tr>

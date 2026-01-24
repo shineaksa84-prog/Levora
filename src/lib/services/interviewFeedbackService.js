@@ -131,7 +131,7 @@ export const generatePersonalizedOnboarding = (candidateId) => {
 
     const plan = {
         candidateId,
-        focus Areas: [],
+        focusAreas: [],
         trainingModules: [],
         mentorshipNeeds: [],
         timeline: '90 days'

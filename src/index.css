@@ -1,97 +1,99 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @layer base {
   :root {
-    /* Levora - Calm, Human, Premium Palette */
+    /* Levora Corporate Light Palette */
+
+    /* Page Background: Very Light Cool Gray/White */
     --background: 210 40% 98%;
-    /* Soft cool white */
+    /* #F8FAFC */
+
+    /* Main Text: Deep Charcoal/Slate */
     --foreground: 222 47% 11%;
-    /* Deep slate almost black */
+    /* #0F172A */
+
+    /* Cards: Pure White */
     --card: 0 0% 100%;
+    /* #FFFFFF */
     --card-foreground: 222 47% 11%;
+
+    /* Popovers: Pure White */
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Primary - Sophisticated Deep Slate/Navy */
-    --primary: 222 47% 18%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Rose Gold (Sophisticated Accent) */
+    /* Darkened slightly for better contrast on light bg, or kept vibrant */
+    --primary: 16 68% 68%;
+    /* #E29578 - Original Rose Gold */
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Soft Warm Gray/Taupe */
-    --secondary: 240 5% 96%;
+    /* Secondary - Elegant Slate/Indigo */
+    --secondary: 210 40% 96.1%;
+    /* Very light gray for backgrounds */
     --secondary-foreground: 222 47% 11%;
 
-    /* Accent - Warm Peach/Terra Cotta (Heart) */
-    --accent: 14 83% 72%;
-    --accent-foreground: 222 47% 11%;
+    /* Accent - Corporate Blue */
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    /* Muted */
-    --muted: 210 40% 96%;
+    /* Extended Accents */
+    --violet: 259 91% 66%;
+
+    /* Utility Colors */
+    --muted: 210 40% 96.1%;
     --muted-foreground: 215 16% 47%;
 
-    /* Semantic Colors - Softened */
     --success: 142 70% 45%;
-    /* Emerald */
-    --success-foreground: 0 0% 100%;
-
+    /* Darker green for visibility */
     --warning: 38 92% 50%;
-    /* Amber */
-    --warning-foreground: 222 47% 11%;
-
     --destructive: 0 84% 60%;
-    /* Soft Red */
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 0 0% 98%;
 
-    /* Borders and Inputs */
     --border: 214 32% 91%;
+    /* Light gray border */
     --input: 214 32% 91%;
-    --ring: 222 47% 18%;
-    /* Match Primary */
-    --radius: 1rem;
-    /* Slightly softer corners for premium feel */
+    --ring: 16 68% 68%;
+    /* Rose Gold Ring */
+
+    --radius: 0.75rem;
+    /* Slightly tighter radius for professional look */
   }
 
-  .dark {
-    --background: 222 47% 6%;
-    /* Even deeper for better depth contrast */
-    --foreground: 210 40% 98%;
-    --card: 222 47% 10%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 10%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 14 83% 78%;
-    --primary-foreground: 222 47% 11%;
-
-    --secondary: 217 19% 20%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 19% 20%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 14 83% 72%;
-    --accent-foreground: 210 40% 98%;
-
-    --success: 142 70% 50%;
-    --warning: 38 92% 50%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 217 19% 22%;
-    --input: 217 19% 22%;
-    --ring: 14 83% 78%;
+  html {
+    scroll-behavior: smooth;
   }
 
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     min-height: 100vh;
-    font-family: 'Outfit', 'Inter', sans-serif;
+    font-family: 'Inter', sans-serif;
+    /* Body primarily Inter for readability */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    /* Subtle corporate gradient */
+    background-image:
+      radial-gradient(circle at 15% 50%, hsla(259, 91%, 66%, 0.05), transparent 25%),
+      radial-gradient(circle at 85% 30%, hsla(16, 68%, 68%, 0.05), transparent 25%);
   }
 
-  /* Smooth Scrollbar */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Outfit', sans-serif;
+  }
+
+  ::selection {
+    background: hsla(16, 68%, 68%, 0.2);
+    color: hsl(16, 68%, 50%);
+  }
+
+  /* Custom Scrollbar - Minimalist */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -102,12 +104,12 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.2);
+    background: hsla(215, 16%, 47%, 0.2);
     border-radius: 10px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.4);
+    background: hsla(215, 16%, 47%, 0.4);
   }
 
   #root {
@@ -115,88 +117,187 @@
   }
 }
 
-/* Custom Gradient Utilities */
+/* Corporate Elite Utilities */
 @layer utilities {
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(200 47% 18%) 0%, hsl(200 47% 12%) 100%);
+    background: linear-gradient(135deg, hsl(258 90% 66%) 0%, hsl(239 84% 67%) 100%);
   }
 
   .gradient-vibrant {
-    background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+    background: linear-gradient(135deg, hsl(258 90% 66%) 0%, hsl(239 84% 67%) 50%, hsl(217 91% 60%) 100%);
   }
 
-  .bg-vibrant-mesh {
-    background-color: hsla(210, 40%, 98%, 1);
-    background-image:
-      radial-gradient(at 0% 0%, hsla(222, 47%, 18%, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(14, 83%, 72%, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(222, 47%, 18%, 0.05) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, hsla(14, 83%, 72%, 0.1) 0px, transparent 50%);
-  }
-
+  /* Premium Light Glass - "Crystal Clear" */
+  /* Combines corporate cleanliness with high-end frosted glass aesthetics */
   .glass-card {
     background: hsla(0, 0%, 100%, 0.7);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid hsla(214, 32%, 91%, 0.4);
-    box-shadow: 0 8px 32px 0 hsla(222, 47%, 11%, 0.01);
-    border-radius: 1rem;
-    transition: all 0.3s ease;
+    /* High transparency white */
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid hsla(0, 0%, 100%, 0.5);
+    /* Subtle white border highlight */
+    box-shadow:
+      0 4px 20px -2px rgba(0, 0, 0, 0.05),
+      /* Soft ambient shadow */
+      0 0 0 1px hsla(214, 32%, 91%, 0.5),
+      /* Crisp containment ring */
+      inset 0 0 20px hsla(0, 0%, 100%, 0.5);
+    /* Inner light glow */
+    border-radius: var(--radius);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .glass-card:hover {
     background: hsla(0, 0%, 100%, 0.85);
-    border-color: hsla(222, 47%, 18%, 0.1);
-    transform: translateY(-2px);
-    box-shadow: 0 12px 40px 0 hsla(222, 47%, 11%, 0.05);
+    transform: translateY(-4px) scale(1.005);
+    box-shadow:
+      0 20px 40px -5px rgba(0, 0, 0, 0.08),
+      0 8px 16px -4px rgba(0, 0, 0, 0.08),
+      inset 0 0 0 1px hsla(16, 68%, 68%, 0.2);
+    /* Rose Gold hint on hover */
+    border-color: hsla(16, 68%, 68%, 0.3);
   }
 
+  /* Sidebar - Frosty & Premium */
   .glass-sidebar {
     background: hsla(0, 0%, 100%, 0.8);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-right: 1px solid hsla(214, 32%, 91%, 0.5);
+    backdrop-filter: blur(24px) saturate(120%);
+    -webkit-backdrop-filter: blur(24px) saturate(120%);
+    border-right: 1px solid hsla(214, 32%, 91%, 0.6);
+  }
+
+  /* Corporate Button Styles - "Jewel" Effect */
+  .cyber-button-primary {
+    background: hsl(222 47% 11%);
+    /* Deep Charcoal base */
+    color: hsl(0 0% 100%);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow:
+      0 4px 12px rgba(15, 23, 42, 0.15),
+      inset 0 1px 0 hsla(0, 0%, 100%, 0.2);
+    /* Top highlight */
+    letter-spacing: 0.025em;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cyber-button-primary:hover {
+    background: hsl(222 47% 15%);
+    box-shadow:
+      0 10px 20px rgba(15, 23, 42, 0.2),
+      inset 0 1px 0 hsla(0, 0%, 100%, 0.3);
+    transform: translateY(-2px);
+  }
+
+  .cyber-button-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.1);
+  }
+
+  /* Rose Gold Button Variant - "Rose Jewel" */
+  .btn-rose {
+    background: hsl(16 68% 68%);
+    color: hsl(0 0% 100%);
+    box-shadow:
+      0 4px 15px hsla(16, 68%, 68%, 0.3),
+      inset 0 1px 0 hsla(0, 0%, 100%, 0.3);
+  }
+
+  .btn-rose:hover {
+    background: hsl(16 68% 72%);
+    box-shadow:
+      0 10px 25px hsla(16, 68%, 68%, 0.4),
+      inset 0 1px 0 hsla(0, 0%, 100%, 0.4);
   }
 
   /* Interactive Elements */
   .hover-lift {
-    transition: transform 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
   }
 
   .hover-lift:hover {
     transform: translateY(-4px);
-  }
-
-  .hover-lift:active {
-    transform: scale(0.95);
+    box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.08);
   }
 
   .active-indicator {
     position: absolute;
     left: 0;
-    width: 4px;
-    height: 24px;
-    background-color: hsl(var(--primary));
-    border-top-right-radius: 9999px;
-    border-bottom-right-radius: 9999px;
-    transition: all 0.3s ease;
+    width: 3px;
+    height: 100%;
+    background: hsl(16 68% 68%);
+    /* Rose Gold indicator */
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 0 12px hsla(16, 68%, 68%, 0.4);
+  }
+
+  /* Glow Effects - Refined for Light Mode */
+  .glow-primary {
+    box-shadow: 0 0 20px hsla(16, 68%, 68%, 0.25);
+  }
+
+  /* Gradient Text - Keep for headers to maintain "Elite" feel */
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(215 16% 47%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-text-rose {
+    background: linear-gradient(135deg, hsl(16 68% 68%) 0%, hsl(346 84% 61%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   /* Animation Utilities */
-  .stagger-item {
-    animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    opacity: 0;
+  .animate-in {
+    animation: fadeIn 0.5s ease-out;
   }
 
-  @keyframes reveal {
+  @keyframes fadeIn {
     from {
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(10px);
     }
 
     to {
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  /* Cyber Tab Styles -> Corporate Tab Styles */
+  .cyber-tab {
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .cyber-tab-active {
+    background: hsl(222 47% 11%);
+    color: hsl(0 0% 100%);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  .cyber-tab-inactive {
+    background: transparent;
+    color: hsl(215 16% 47%);
+    border: 1px solid transparent;
+  }
+
+  .cyber-tab-inactive:hover {
+    background: hsl(210 40% 96.1%);
+    color: hsl(222 47% 11%);
   }
 }

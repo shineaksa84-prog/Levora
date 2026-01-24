@@ -1,0 +1,30 @@
+﻿
+> hrims-ai@0.0.0 build
+> vite build error
+
+[36mvite v7.2.4 [32mbuilding client environment for production...[36m[39m
+[32mΓ£ô[39m 0 modules transformed.
+node.exe : [31mΓ£ù[39m Build failed in 39ms
+At C:\Program Files\nodejs\npm.ps1:29 char:3
++   & $NODE_EXE $NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([ 
+   31mΓ£ù[39m Build failed in 39ms:String) []  
+  , RemoteException
+    + FullyQualifiedErrorId : NativeCommandErro 
+   r
+ 
+[31merror during build:
+[31mCould not resolve entry module 
+"error/index.html".[31m
+    at getRollupError (file:///C:/Users/Lenovo/.
+gemini/antigravity/scratch/hrims-ai/node_modules
+/rollup/dist/es/shared/parseAst.js:401:41)
+    at error (file:///C:/Users/Lenovo/.gemini/an
+tigravity/scratch/hrims-ai/node_modules/rollup/d
+ist/es/shared/parseAst.js:397:42)
+    at ModuleLoader.loadEntryModule (file:///C:/
+Users/Lenovo/.gemini/antigravity/scratch/hrims-a
+i/node_modules/rollup/dist/es/shared/node-entry.
+js:21611:20)
+    at async Promise.all (index 0)[39m

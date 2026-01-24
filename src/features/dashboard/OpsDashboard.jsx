@@ -11,32 +11,69 @@ import TicketManager from '../services/TicketManager';
 import ChangeRequestBoard from '../services/ChangeRequestBoard';
 import LetterGenerator from '../documents/LetterGenerator';
 import ExitManager from '../offboarding/ExitManager';
+import HROpsHelpdesk from '../helpdesk/HROpsHelpdesk';
 import GrievanceAnalyzer from '../engagement/GrievanceAnalyzer';
+import DocumentVault from '../documents/DocumentVault';
+import GeneralAssets from '../assets/GeneralAssets';
+import VisitorLog from '../facilities/VisitorLog';
 
 export default function OpsDashboard() {
     const [view, setView] = useState('dashboard');
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                    <h1 className="text-2xl font-bold text-gray-900">HR Operations {view === 'dashboard' ? 'Overview' : ''}</h1>
-                    <div className="flex bg-muted/50 p-1 rounded-lg overflow-x-auto">
-                        <button onClick={() => setView('dashboard')} className={`px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all ${view === 'dashboard' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>Dashboard</button>
-                        <button onClick={() => setView('attendance')} className={`px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all ${view === 'attendance' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>Attendance Rules</button>
-                        <button onClick={() => setView('documents')} className={`px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all ${view === 'documents' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>Documents</button>
-                        <button onClick={() => setView('tickets')} className={`px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all ${view === 'tickets' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>Helpdesk</button>
-                        <button onClick={() => setView('changes')} className={`px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all ${view === 'changes' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>Changes</button>
-                        <button onClick={() => setView('letters')} className={`px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all ${view === 'letters' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>Letters</button>
-                        <button onClick={() => setView('exits')} className={`px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all ${view === 'exits' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>Offboarding</button>
-                        <button onClick={() => setView('grievance')} className={`px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all ${view === 'grievance' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>Grievances</button>
-                        <button onClick={() => setView('auditor')} className={`px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all ${view === 'auditor' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>Data Auditor</button>
-                        <button onClick={() => setView('policy')} className={`px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all ${view === 'policy' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>Policy Builder</button>
+        <div className="space-y-8 pb-10">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent">
+                            <ShieldCheck className="w-4 h-4" />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Levora Operations</span>
                     </div>
+                    <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-none">
+                        HR <span className="text-primary italic">Command</span>
+                    </h1>
+                    <p className="text-muted-foreground font-medium mt-3 max-w-md">
+                        Institutional control plane for compliance, attendance, and operational continuity.
+                    </p>
                 </div>
-                <button className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
-                    + New Request
-                </button>
+                <div>
+                    <button className="bg-primary text-white px-6 py-4 rounded-2xl text-xs font-black shadow-xl shadow-primary/30 hover:scale-105 transition-all active:scale-95 flex items-center gap-2">
+                        + New Request
+                    </button>
+                </div>
+            </div>
+
+            {/* Navigation Pills */}
+            <div className="flex bg-muted/50 p-1.5 rounded-[2rem] border border-border/50 w-full overflow-x-auto no-scrollbar">
+                {[
+                    { id: 'dashboard', label: 'Dashboard' },
+                    { id: 'attendance', label: 'Attendance' },
+                    { id: 'documents', label: 'Documents' },
+                    { id: 'tickets', label: 'Helpdesk' },
+                    { id: 'changes', label: 'Changes' },
+                    { id: 'letters', label: 'Letters' },
+                    { id: 'exits', label: 'Exits' },
+                    { id: 'grievance', label: 'Grievances' },
+                    { id: 'auditor', label: 'Auditor' },
+                    { id: 'policy', label: 'Policies' },
+                    { id: 'helpdesk', label: 'HR Helpdesk' },
+                    { id: 'vault', label: 'Vault' }, // Added 'Vault' tab
+                    { id: 'assets', label: 'Physical Assets' },
+                    { id: 'visitors', label: 'Visitors' }
+                ].map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setView(tab.id)}
+                        className={`px-6 py-3 rounded-2xl text-xs font-black transition-all whitespace-nowrap ${view === tab.id
+                            ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-white/50'
+                            }`}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
             </div>
 
             {view === 'attendance' && <AttendanceRules />}
@@ -48,6 +85,10 @@ export default function OpsDashboard() {
             {view === 'grievance' && <GrievanceAnalyzer />}
             {view === 'auditor' && <DataAuditor />}
             {view === 'policy' && <PolicyBuilder />}
+            {view === 'helpdesk' && <HROpsHelpdesk />}
+            {view === 'vault' && <DocumentVault isAdmin={true} />} {/* Render DocumentVault for 'vault' view */}
+            {view === 'assets' && <GeneralAssets />}
+            {view === 'visitors' && <VisitorLog />}
 
             {view === 'dashboard' && (
                 <div className="space-y-6">

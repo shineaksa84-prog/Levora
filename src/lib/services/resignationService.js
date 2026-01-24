@@ -1,8 +1,3 @@
-/**
- * Resignation Service
- * Handles resignation workflow and auto-generates offboarding checklists
- */
-
 import {
     collection,
     addDoc,
@@ -16,14 +11,33 @@ import {
     serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { APP_CONFIG } from '../../config/appConfig';
 
 const RESIGNATIONS_COLLECTION = 'resignations';
 const CHECKLISTS_COLLECTION = 'offboarding_checklists';
+const DEV_MODE = APP_CONFIG.DEV_MODE;
+
+// Helper for local persistence
+const getLocalData = (key) => JSON.parse(localStorage.getItem(key)) || null;
+const setLocalData = (key, data) => localStorage.setItem(key, JSON.stringify(data));
+
+const MOCK_RESIGNATIONS = [
+    { id: 'RES-001', employee: 'John Doe', role: 'Software Engineer', submittedAt: '2023-12-01', status: 'Pending', lastDay: '2024-02-01' },
+    { id: 'RES-002', employee: 'Jane Smith', role: 'HR Manager', submittedAt: '2023-11-15', status: 'Approved', lastDay: '2024-01-15' },
+];
 
 /**
  * Get all resignations
  */
 export const getResignations = async () => {
+    if (DEV_MODE) {
+        let resignations = getLocalData(RESIGNATIONS_COLLECTION);
+        if (!resignations) {
+            resignations = MOCK_RESIGNATIONS;
+            setLocalData(RESIGNATIONS_COLLECTION, resignations);
+        }
+        return Promise.resolve(resignations);
+    }
     try {
         const q = query(collection(db, RESIGNATIONS_COLLECTION), orderBy('submittedAt', 'desc'));
         const querySnapshot = await getDocs(q);
@@ -38,21 +52,26 @@ export const getResignations = async () => {
  * Submit a resignation request
  */
 export const submitResignation = async (resignationData) => {
-    try {
-        const resignation = {
-            employeeId: resignationData.employeeId,
-            employee: resignationData.employee,
-            role: resignationData.role,
-            department: resignationData.department,
-            date: new Date().toISOString().split('T')[0],
-            lastDay: resignationData.lastDay,
-            reason: resignationData.reason,
-            reasonDetails: resignationData.reasonDetails || '',
-            status: 'Pending',
-            submittedAt: new Date().toISOString(),
-            createdAt: serverTimestamp()
-        };
+    const resignation = {
+        employeeId: resignationData.employeeId || 'EMP-' + Math.floor(Math.random() * 1000),
+        employee: resignationData.employee || 'Demo User',
+        role: resignationData.role || 'Software Engineer',
+        department: resignationData.department || 'Engineering',
+        date: new Date().toISOString().split('T')[0],
+        lastDay: resignationData.lastDay,
+        reason: resignationData.reason,
+        reasonDetails: resignationData.reasonDetails || '',
+        status: 'Pending',
+        submittedAt: new Date().toISOString()
+    };
 
+    if (DEV_MODE) {
+        const resignations = getLocalData(RESIGNATIONS_COLLECTION) || [];
+        const newResignation = { id: 'RES-' + Math.floor(Math.random() * 1000), ...resignation };
+        setLocalData(RESIGNATIONS_COLLECTION, [...resignations, newResignation]);
+        return Promise.resolve(newResignation);
+    }
+    try {
         const docRef = await addDoc(collection(db, RESIGNATIONS_COLLECTION), resignation);
         return { id: docRef.id, ...resignation };
     } catch (error) {
@@ -240,6 +259,17 @@ export const getOffboardingChecklist = async (resignationId) => {
  * Get resignation statistics
  */
 export const getResignationStats = async () => {
+    if (DEV_MODE) {
+        const resignations = getLocalData(RESIGNATIONS_COLLECTION) || MOCK_RESIGNATIONS;
+        const currentYear = new Date().getFullYear();
+        return {
+            total: resignations.length,
+            pending: resignations.filter(r => r.status === 'Pending').length,
+            approved: resignations.filter(r => r.status === 'Approved').length,
+            thisYear: resignations.filter(r => new Date(r.submittedAt || r.date).getFullYear() === currentYear).length,
+            byReason: getResignationsByReason(resignations)
+        };
+    }
     try {
         const querySnapshot = await getDocs(collection(db, RESIGNATIONS_COLLECTION));
         const resignations = querySnapshot.docs.map(doc => doc.data());

@@ -28,55 +28,63 @@ export default function AttendanceRules() {
     };
 
     return (
-        <div className="grid lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
-            <div className="lg:col-span-2 space-y-6">
-                <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-bold flex items-center gap-2">
-                            <Settings className="w-5 h-5 text-primary" />
-                            Attendance & Shift Rules
+        <div className="grid lg:grid-cols-3 gap-10 h-[calc(100vh-200px)] animate-in fade-in duration-700">
+            <div className="lg:col-span-2 space-y-10 overflow-y-auto no-scrollbar pb-10">
+                {/* Governance Matrix */}
+                <div className="bg-card rounded-[3rem] border border-border p-10 shadow-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="flex justify-between items-center mb-10">
+                        <h2 className="text-2xl font-black flex items-center gap-6 uppercase tracking-tighter">
+                            <div className="p-3 bg-primary/10 rounded-xl shadow-inner">
+                                <Settings className="w-6 h-6 text-primary" />
+                            </div>
+                            Shift <span className="text-primary italic">Governance</span>
                         </h2>
-                        <button className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
-                            + Add New Rule
+                        <button className="bg-primary text-primary-foreground px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20 group/btn relative overflow-hidden">
+                            <span className="relative z-10 flex items-center gap-3">
+                                <Save className="w-4 h-4" /> Initialize Protocol
+                            </span>
+                            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300"></div>
                         </button>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         {rules.map((rule) => (
-                            <div key={rule.id} className="border border-border rounded-xl p-4 hover:border-primary/50 transition-colors bg-card">
-                                <div className="flex justify-between items-start">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                                            <Clock className="w-5 h-5" />
+                            <div key={rule.id} className="border border-border rounded-[2.5rem] p-8 hover:border-primary/50 transition-all bg-background/50 relative overflow-hidden group/item shadow-inner">
+                                <div className="absolute left-0 top-0 w-1 h-full bg-primary/10 group-hover/item:bg-primary transition-all"></div>
+                                <div className="flex justify-between items-start relative z-10">
+                                    <div className="flex items-center gap-8">
+                                        <div className="w-14 h-14 rounded-2xl bg-foreground text-background flex items-center justify-center shadow-xl group-hover/item:rotate-3 transition-transform">
+                                            <Clock className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-gray-900">{rule.name}</h3>
-                                            <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
-                                                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {rule.start} - {rule.end}</span>
-                                                <span className="flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Grace: {rule.grace}</span>
-                                                <span className={`px-2 py-0.5 rounded textxs font-medium ${rule.type === 'Remote' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}`}>
+                                            <h3 className="text-lg font-black text-foreground uppercase tracking-tight">{rule.name}</h3>
+                                            <div className="flex items-center gap-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-2">
+                                                <span className="flex items-center gap-2 bg-muted px-3 py-1 rounded-lg"><Clock className="w-3 h-3 text-primary" /> {rule.start} — {rule.end}</span>
+                                                <span className="flex items-center gap-2 bg-muted px-3 py-1 rounded-lg"><AlertCircle className="w-3 h-3 text-primary" /> Grace: {rule.grace}</span>
+                                                <span className={`px-3 py-1 rounded-lg border ${rule.type === 'Remote' ? 'border-primary/30 text-primary' : 'border-border text-foreground'}`}>
                                                     {rule.type}
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <label className="relative inline-flex items-center cursor-pointer">
+                                        <label className="relative inline-flex items-center cursor-pointer group/toggle">
                                             <input type="checkbox" checked={rule.active} className="sr-only peer" readOnly />
-                                            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-600"></div>
+                                            <div className="w-12 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                                         </label>
                                     </div>
                                 </div>
 
-                                {/* Expansion for details (Visual only for now) */}
-                                <div className="mt-4 pt-4 border-t border-dashed border-gray-200 grid grid-cols-2 gap-4 text-sm">
-                                    <div>
-                                        <span className="text-muted-foreground block text-xs uppercase font-bold mb-1">Overtime Policy</span>
-                                        <span className="font-medium text-gray-700">Standard (1.5x after 45hrs)</span>
+                                {/* Policy Node Extensions */}
+                                <div className="mt-8 pt-8 border-t border-border/50 grid grid-cols-2 gap-8 relative z-10">
+                                    <div className="group/sub">
+                                        <span className="text-muted-foreground block text-[9px] font-black uppercase tracking-[0.2em] mb-2 opacity-60">Overtime Policy</span>
+                                        <span className="text-xs font-black text-foreground uppercase tracking-wider italic">Standard Vector (1.5x after 45hrs)</span>
                                     </div>
-                                    <div>
-                                        <span className="text-muted-foreground block text-xs uppercase font-bold mb-1">Regularization Limit</span>
-                                        <span className="font-medium text-gray-700">3 per month</span>
+                                    <div className="group/sub">
+                                        <span className="text-muted-foreground block text-[9px] font-black uppercase tracking-[0.2em] mb-2 opacity-60">Regularization Limit</span>
+                                        <span className="text-xs font-black text-foreground uppercase tracking-wider italic">03 per temporal cycle</span>
                                     </div>
                                 </div>
                             </div>
@@ -85,17 +93,23 @@ export default function AttendanceRules() {
                 </div>
             </div>
 
-            <div className="space-y-6">
-                <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                        <PlayCircle className="w-5 h-5 text-purple-600" />
-                        Rule Simulator
+            <div className="space-y-10">
+                {/* Neural Simulator Hub */}
+                <div className="bg-foreground text-background rounded-[3.5rem] p-10 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] relative group overflow-hidden border border-white/10">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full -mr-32 -mt-32 blur-[120px] animate-pulse"></div>
+                    <h3 className="text-sm font-black text-white mb-8 flex items-center gap-4 uppercase tracking-[0.2em] relative z-10">
+                        <div className="p-2 bg-primary/20 rounded-lg">
+                            <PlayCircle className="w-5 h-5 text-primary" />
+                        </div>
+                        Logic Simulator
                     </h3>
-                    <p className="text-sm text-muted-foreground mb-4">Test how your logic handles specific check-in times based on "General Shift".</p>
+                    <p className="text-[10px] font-black text-white/40 mb-10 uppercase tracking-widest leading-relaxed relative z-10 italic">
+                        Stress-test shift logic against synthetic check-in vectors based on <span className="text-white">Active General Protocols</span>.
+                    </p>
 
-                    <div className="space-y-4">
-                        <div>
-                            <label className="text-sm font-medium mb-1.5 block">Simulate Check-in Time</label>
+                    <div className="space-y-8 relative z-10">
+                        <div className="group/input">
+                            <label className="text-[9px] font-black text-white/40 uppercase tracking-[0.3em] mb-3 block ml-2">Temporal Input Vector</label>
                             <input
                                 type="time"
                                 value={testTime}
@@ -103,34 +117,48 @@ export default function AttendanceRules() {
                                     setTestTime(e.target.value);
                                     setTestResult(null);
                                 }}
-                                className="w-full p-2.5 rounded-lg border border-input bg-background"
+                                className="w-full bg-white/5 p-5 rounded-2xl border border-white/10 text-white font-black tracking-tighter text-2xl outline-none focus:border-primary/50 transition-all shadow-inner"
                             />
                         </div>
 
                         <button
                             onClick={() => testRule(testTime)}
-                            className="w-full bg-purple-600 text-white font-medium py-2.5 rounded-lg hover:bg-purple-700 transition-colors"
+                            className="w-full bg-primary text-primary-foreground font-black py-5 rounded-2xl text-[10px] uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-95 transition-all shadow-2xl shadow-primary/20 relative overflow-hidden group/btn"
                         >
-                            Run Simulation
+                            <span className="relative z-10 flex items-center justify-center gap-3 uppercase">
+                                <PlayCircle className="w-4 h-4" /> Run Vector Simulation
+                            </span>
+                            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300"></div>
                         </button>
 
                         {testResult && (
-                            <div className={`p-4 rounded-lg border mt-4 text-center ${testResult.includes('Late') ? 'bg-orange-50 border-orange-200 text-orange-900' :
-                                testResult.includes('Absent') ? 'bg-red-50 border-red-200 text-red-900' :
-                                    'bg-green-50 border-green-200 text-green-900'
+                            <div className={`p-8 rounded-[2rem] border animate-in slide-in-from-bottom-5 duration-500 text-center relative overflow-hidden ${testResult.includes('Late') ? 'bg-primary/10 border-primary/20 text-primary' :
+                                testResult.includes('Absent') ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' :
+                                    'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
                                 }`}>
-                                <h4 className="font-bold text-lg mb-1">{testResult.split('(')[0]}</h4>
-                                <span className="text-xs opacity-80">{testResult.includes('(') ? `(${testResult.split('(')[1]}` : ''}</span>
+                                <h4 className="text-2xl font-black mb-2 tracking-tighter uppercase italic">{testResult.split('(')[0]}</h4>
+                                <span className="text-[9px] font-black uppercase tracking-[0.3em] opacity-60 leading-relaxed block">
+                                    {testResult.includes('(') ? `${testResult.split('(')[1].replace(')', '')}` : 'Protocol Match'}
+                                </span>
+                                <div className="absolute top-0 right-0 w-16 h-16 bg-current opacity-10 rounded-full -mr-8 -mt-8"></div>
                             </div>
                         )}
                     </div>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-100 rounded-xl p-5">
-                    <h4 className="font-bold text-blue-900 mb-2">Auto-Correction Tips</h4>
-                    <ul className="text-sm text-blue-800 space-y-2 list-disc pl-4">
-                        <li>Enable "Smart Grace" to ignore &lt; 5 min delays on rainy days.</li>
-                        <li>Link "Work from Home" requests to attendance automatically to prevent absent marking.</li>
+                {/* Auto-Correction Logic Node */}
+                <div className="bg-card border border-border rounded-[3rem] p-8 relative overflow-hidden group shadow-xl">
+                    <div className="absolute left-0 top-0 w-1 h-full bg-primary/20"></div>
+                    <h4 className="text-[10px] font-black text-foreground mb-6 uppercase tracking-[0.2em]">Optimization Directives</h4>
+                    <ul className="text-[10px] font-black text-muted-foreground space-y-4 uppercase tracking-widest leading-relaxed">
+                        <li className="flex items-start gap-3 group/li transition-all hover:translate-x-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1 shrink-0"></span>
+                            <span>Enable <span className="text-foreground">"Smart Grace"</span> to negate &lt; 5 min institutional drift on adverse weather cycles.</span>
+                        </li>
+                        <li className="flex items-start gap-3 group/li transition-all hover:translate-x-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1 shrink-0"></span>
+                            <span>Synchronize <span className="text-foreground">"Remote Work"</span> protocols to attendance vectors to eliminate false negatives.</span>
+                        </li>
                     </ul>
                 </div>
             </div>

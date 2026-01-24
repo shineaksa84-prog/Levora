@@ -1,15 +1,25 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, Mic, Play, Square, User, Bot } from 'lucide-react';
+import { Camera, Mic, Play, Square, User, Bot, Activity, CheckCircle2, AlertTriangle, BarChart3 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function VideoScreener() {
     const [isRecording, setIsRecording] = useState(false);
     const [questionIndex, setQuestionIndex] = useState(0);
     const videoRef = useRef(null);
+    const [sentiment, setSentiment] = useState(50); // 0-100
+    const [detectedCompetencies, setDetectedCompetencies] = useState(new Set());
 
     const questions = [
         "Tell me about a challenging project you worked on recently.",
         "How do you handle disagreements with team members?",
         "What is your experience with React and modern frontend tools?",
+    ];
+
+    const competencies = [
+        { id: 'communication', label: 'Clear Communication' },
+        { id: 'technical', label: 'Technical Depth' },
+        { id: 'conflict', label: 'Conflict Resolution' },
+        { id: 'leadership', label: 'Leadership Potential' }
     ];
 
     useEffect(() => {
@@ -28,10 +38,31 @@ export default function VideoScreener() {
         }
     }, [isRecording]);
 
+    // Simulate Real-time AI Analysis
+    useEffect(() => {
+        let interval;
+        if (isRecording) {
+            interval = setInterval(() => {
+                // Fluctuating sentiment
+                setSentiment(prev => {
+                    const change = (Math.random() - 0.5) * 20;
+                    return Math.min(100, Math.max(0, prev + change));
+                });
+
+                // Randomly detect a competency
+                if (Math.random() > 0.8) {
+                    const randomComp = competencies[Math.floor(Math.random() * competencies.length)];
+                    setDetectedCompetencies(prev => new Set(prev).add(randomComp.id));
+                }
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [isRecording]);
+
     return (
         <div className="grid lg:grid-cols-3 gap-6 h-[calc(100vh-12rem)]">
             {/* Main Video Area */}
-            <div className="lg:col-span-2 bg-black rounded-xl overflow-hidden relative flex flex-col">
+            <div className="lg:col-span-2 bg-black rounded-xl overflow-hidden relative flex flex-col shadow-2xl ring-1 ring-white/10">
                 <div className="flex-1 relative bg-zinc-900 flex items-center justify-center">
                     {isRecording ? (
                         <video ref={videoRef} autoPlay muted className="w-full h-full object-cover" />
@@ -42,89 +73,154 @@ export default function VideoScreener() {
                         </div>
                     )}
 
-                    {/* AI Interviewer Overlay */}
-                    <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-md border border-white/10 p-3 rounded-lg w-48">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                                <Bot className="w-5 h-5 text-primary-foreground" />
+                    {/* AI HUD Overlay */}
+                    <div className="absolute top-4 right-4 flex flex-col gap-2">
+                        <div className="bg-black/60 backdrop-blur-md border border-white/10 p-3 rounded-xl w-56">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center animate-pulse">
+                                    <Bot className="w-5 h-5 text-primary-foreground" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-white uppercase tracking-wider">AI Interviewer</p>
+                                    <p className="text-[10px] text-zinc-400 flex items-center gap-1">
+                                        <Activity className="w-3 h-3 text-green-500" /> Live Analysis Active
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-xs font-bold text-white">AI Interviewer</p>
-                                <p className="text-[10px] text-zinc-400">Listening...</p>
+                            {/* Sentiment Graph Simulation */}
+                            <div className="h-8 flex items-end justify-between gap-1 mt-2">
+                                {[...Array(20)].map((_, i) => (
+                                    <motion.div
+                                        key={i}
+                                        initial={{ height: '20%' }}
+                                        animate={{ height: `${Math.random() * 100}%` }}
+                                        transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
+                                        className={`w-1 rounded-full ${sentiment > 50 ? 'bg-green-500/50' : 'bg-amber-500/50'}`}
+                                    />
+                                ))}
                             </div>
-                        </div>
-                        <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-green-500 w-2/3 animate-pulse"></div>
+                            <div className="flex justify-between items-center mt-1">
+                                <span className="text-[8px] text-zinc-500 uppercase">Sentiment</span>
+                                <span className={`text-[10px] font-bold ${sentiment > 50 ? 'text-green-400' : 'text-amber-400'}`}>
+                                    {sentiment > 50 ? 'POSITIVE' : 'NEUTRAL'}
+                                </span>
+                            </div>
                         </div>
                     </div>
+
+                    {/* Subtitles Overlay */}
+                    {isRecording && (
+                        <div className="absolute bottom-10 left-0 right-0 text-center px-10">
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="inline-block bg-black/50 backdrop-blur-sm px-4 py-2 rounded-lg text-white/90 text-sm font-medium"
+                            >
+                                "Yes, the biggest challenge was migrating the legacy Redux codebase..."
+                            </motion.div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Controls */}
-                <div className="bg-zinc-900 p-6 flex items-center justify-between border-t border-zinc-800">
+                <div className="bg-zinc-950 p-6 flex items-center justify-between border-t border-zinc-800">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setIsRecording(!isRecording)}
-                            className={`p-4 rounded-full transition-all ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-primary hover:bg-primary/90'
-                                }`}
+                            className={`p-4 rounded-full transition-all flex items-center justify-center shadow-lg ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-primary hover:bg-primary/90'}`}
                         >
-                            {isRecording ? <Square className="w-6 h-6 text-white" /> : <Play className="w-6 h-6 text-white ml-1" />}
+                            {isRecording ? <Square className="w-6 h-6 text-white fill-current" /> : <Play className="w-6 h-6 text-white ml-1 fill-current" />}
                         </button>
                         <div>
-                            <p className="text-white font-medium">{isRecording ? 'Recording...' : 'Start Interview'}</p>
-                            <p className="text-sm text-zinc-400">{isRecording ? '00:45 / 02:00' : 'Ready to begin'}</p>
+                            <p className="text-white font-bold">{isRecording ? 'Interview in Progress' : 'Start Interview'}</p>
+                            <p className="text-xs text-zinc-400 font-mono">{isRecording ? '00:45 / 30:00' : 'Ready to record'}</p>
                         </div>
                     </div>
-                    <div className="flex gap-2">
-                        <button className="p-2 rounded-full bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700">
-                            <Mic className="w-5 h-5" />
-                        </button>
-                        <button className="p-2 rounded-full bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700">
-                            <Camera className="w-5 h-5" />
-                        </button>
+                    <div className="flex gap-3">
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 rounded-lg border border-zinc-800">
+                            <Mic className="w-4 h-4 text-green-500" />
+                            <div className="w-20 h-1 bg-zinc-800 rounded-full overflow-hidden">
+                                <motion.div
+                                    animate={{ width: isRecording ? ["0%", "80%", "30%"] : "0%" }}
+                                    transition={{ repeat: Infinity, duration: 0.2 }}
+                                    className="h-full bg-green-500"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Sidebar: Questions & Transcript */}
-            <div className="bg-card border border-border rounded-xl flex flex-col overflow-hidden">
-                <div className="p-4 border-b border-border bg-muted/30">
-                    <h3 className="font-semibold">Interview Session</h3>
-                    <p className="text-sm text-muted-foreground">React Developer Role</p>
+            {/* Sidebar: Intelligence Dashboard */}
+            <div className="bg-card border border-border rounded-xl flex flex-col overflow-hidden shadow-sm">
+                <div className="p-4 border-b border-border bg-muted/20">
+                    <h3 className="font-bold flex items-center gap-2 text-sm">
+                        <BarChart3 className="w-4 h-4 text-primary" />
+                        Live Intelligence
+                    </h3>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                    <div>
-                        <h4 className="text-sm font-medium text-primary mb-2">Current Question ({questionIndex + 1}/{questions.length})</h4>
-                        <p className="text-lg font-medium leading-relaxed">
+                    {/* Question Card */}
+                    <div className="text-center p-6 bg-primary/5 rounded-2xl border border-primary/10">
+                        <span className="text-[10px] font-black uppercase text-primary tracking-widest mb-2 block">Question {questionIndex + 1} of {questions.length}</span>
+                        <p className="text-lg font-bold leading-tight">
                             "{questions[questionIndex]}"
                         </p>
                     </div>
 
-                    <div className="space-y-3">
-                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Live Transcript</h4>
-                        <div className="flex gap-3">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                <Bot className="w-4 h-4 text-primary" />
-                            </div>
-                            <div className="bg-muted/50 p-3 rounded-lg rounded-tl-none text-sm">
-                                <p>Could you elaborate on the state management libraries you used?</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-3 flex-row-reverse">
-                            <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
-                                <User className="w-4 h-4 text-secondary-foreground" />
-                            </div>
-                            <div className="bg-primary/5 p-3 rounded-lg rounded-tr-none text-sm">
-                                <p>Yes, primarily Redux Toolkit for global state and React Query for server state...</p>
-                            </div>
+                    {/* Competency Tracker */}
+                    <div>
+                        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Competency Signals</h4>
+                        <div className="space-y-2">
+                            {competencies.map((comp) => (
+                                <div
+                                    key={comp.id}
+                                    className={`flex items-center justify-between p-3 rounded-xl border transition-all ${detectedCompetencies.has(comp.id)
+                                            ? 'bg-green-500/10 border-green-500/20 shadow-sm'
+                                            : 'bg-muted/10 border-transparent opacity-60'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${detectedCompetencies.has(comp.id) ? 'bg-green-500 text-white' : 'bg-muted text-muted-foreground'
+                                            }`}>
+                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                        </div>
+                                        <span className={`text-sm font-medium ${detectedCompetencies.has(comp.id) ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                            {comp.label}
+                                        </span>
+                                    </div>
+                                    {detectedCompetencies.has(comp.id) && (
+                                        <span className="text-[10px] font-bold text-green-600 bg-white/50 px-2 py-0.5 rounded">DETECTED</span>
+                                    )}
+                                </div>
+                            ))}
                         </div>
                     </div>
+
+                    {/* Recommendations */}
+                    <AnimatePresence>
+                        {sentiment < 30 && isRecording && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex gap-3 text-amber-700"
+                            >
+                                <AlertTriangle className="w-5 h-5 shrink-0" />
+                                <div className="text-xs">
+                                    <span className="font-bold block mb-1">Low Confidence Detected</span>
+                                    Candidate seems unsure. Consider probing deeper into their specific contribution to the project.
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
 
                 <div className="p-4 border-t border-border">
                     <button
                         onClick={() => setQuestionIndex((i) => (i + 1) % questions.length)}
-                        className="w-full py-2 bg-secondary text-secondary-foreground rounded-md text-sm font-medium hover:bg-secondary/80"
+                        className="w-full py-3 bg-secondary text-secondary-foreground rounded-xl text-sm font-bold hover:bg-secondary/80 transition-colors"
                     >
                         Next Question
                     </button>

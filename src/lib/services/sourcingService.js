@@ -65,6 +65,61 @@ class SourcingService {
     async getBooleanSearchTree(naturalQuery) {
         return await geminiService.parseNaturalToBoolean(naturalQuery);
     }
+
+    /**
+     * Get Campaigns (MOCK)
+     */
+    async getCampaigns() {
+        if (!this.campaigns) {
+            this.campaigns = [
+                {
+                    id: 1,
+                    name: 'Senior Systems Architect',
+                    platform: 'LinkedIn Recruiter',
+                    sent: 450,
+                    openRate: 68,
+                    responseRate: 24,
+                    status: 'Active',
+                    sentiment: 'High'
+                },
+                {
+                    id: 2,
+                    name: 'UX Design Lead',
+                    platform: 'Dribbble / Behance',
+                    sent: 120,
+                    openRate: 85,
+                    responseRate: 42,
+                    status: 'Active',
+                    sentiment: 'Very High'
+                }
+            ];
+        }
+        return Promise.resolve(this.campaigns);
+    }
+
+    /**
+     * Create Campaign (MOCK)
+     */
+    async createCampaign() {
+        if (!this.campaigns) await this.getCampaigns();
+
+        const platforms = ['LinkedIn Recruiter', 'GitHub Direct', 'AngelList', 'StackOverflow'];
+        const roles = ['DevOps Engineer', 'Product Manager', 'Data Scientist', 'AI Researcher'];
+
+        const newCampaign = {
+            id: Date.now(),
+            name: roles[Math.floor(Math.random() * roles.length)],
+            platform: platforms[Math.floor(Math.random() * platforms.length)],
+            sent: 0,
+            openRate: 0,
+            responseRate: 0,
+            status: 'Active',
+            sentiment: 'Neutral'
+        };
+
+        this.campaigns.unshift(newCampaign);
+        return Promise.resolve(newCampaign);
+    }
 }
 
 export const sourcingService = new SourcingService();

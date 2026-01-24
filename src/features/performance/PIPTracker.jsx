@@ -1,19 +1,38 @@
 import { useState } from 'react';
-import { AlertTriangle, Calendar, FileText, CheckSquare, XCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { AlertTriangle, Calendar, FileText, CheckSquare, XCircle, Loader2 } from 'lucide-react';
+import { toast } from '../../lib/services/toastService';
 
 export default function PIPTracker() {
+    const navigate = useNavigate();
+    const [status, setStatus] = useState('Active');
+    const [submitting, setSubmitting] = useState(false);
+
     const [pip] = useState({
         emp: 'Mike Ross',
         reason: 'Consistently missing sales targets for Q2 & Q3.',
         startDate: '2023-11-01',
         endDate: '2023-12-31',
-        status: 'Active',
         checkpoints: [
             { date: '2023-11-15', status: 'Missed', note: 'Achieved 40% of target (Expected 50%)' },
             { date: '2023-11-30', status: 'Met', note: 'Achieved 85% of target (Expected 80%)' },
             { date: '2023-12-15', status: 'Pending', note: '' },
         ]
     });
+
+    const handlePrepareExit = () => {
+        toast.warning('Initiating Offboarding Protocol for high-risk PIP failure.');
+        navigate('/offboarding');
+    };
+
+    const handleExtendPIP = () => {
+        setSubmitting(true);
+        setTimeout(() => {
+            setStatus('Extended');
+            setSubmitting(false);
+            toast.success('Performance Improvement Plan extended by 30 days.');
+        }, 1000);
+    };
 
     return (
         <div className="grid lg:grid-cols-2 gap-6 h-[calc(100vh-200px)]">
@@ -24,10 +43,10 @@ export default function PIPTracker() {
                             <AlertTriangle className="w-5 h-5" />
                             Active PIP: {pip.emp}
                         </h2>
-                        <p className="text-sm text-muted-foreground mt-1">Duration: 60 Days</p>
+                        <p className="text-sm text-muted-foreground mt-1">Duration: 60 Days • Status: <span className="font-bold text-primary">{status}</span></p>
                     </div>
-                    <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
-                        Actions Required
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${status === 'Extended' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800 animate-pulse'}`}>
+                        {status === 'Extended' ? 'Extension Protocol' : 'Actions Required'}
                     </span>
                 </div>
 
@@ -41,7 +60,7 @@ export default function PIPTracker() {
                         {pip.checkpoints.map((cp, i) => (
                             <div key={i} className="relative">
                                 <div className={`absolute -left-[25px] w-6 h-6 rounded-full border-2 flex items-center justify-center bg-white ${cp.status === 'Met' ? 'border-green-500 text-green-500' :
-                                        cp.status === 'Missed' ? 'border-red-500 text-red-500' : 'border-gray-300 text-gray-300'
+                                    cp.status === 'Missed' ? 'border-red-500 text-red-500' : 'border-gray-300 text-gray-300'
                                     }`}>
                                     {cp.status === 'Met' ? <CheckSquare className="w-3 h-3" /> : cp.status === 'Missed' ? <XCircle className="w-3 h-3" /> : <div className="w-2 h-2 bg-gray-300 rounded-full"></div>}
                                 </div>
@@ -82,8 +101,19 @@ export default function PIPTracker() {
                         Based on current trajectory (1 Missed, 1 Met), the employee is at risk of termination if the final checkpoint is not met with significant improvement.
                     </p>
                     <div className="flex gap-2">
-                        <button className="flex-1 bg-white border border-red-200 text-red-700 py-2 rounded-lg font-bold hover:bg-red-100 text-xs">Prepare Exit</button>
-                        <button className="flex-1 bg-red-600 text-white py-2 rounded-lg font-bold hover:bg-red-700 text-xs">Extend PIP</button>
+                        <button
+                            onClick={handlePrepareExit}
+                            className="flex-1 bg-white border border-red-200 text-red-700 py-2 rounded-lg font-bold hover:bg-red-100 text-xs"
+                        >
+                            Prepare Exit
+                        </button>
+                        <button
+                            onClick={handleExtendPIP}
+                            disabled={submitting || status === 'Extended'}
+                            className="flex-1 bg-red-600 text-white py-2 rounded-lg font-bold hover:bg-red-700 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            {submitting ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Extend PIP'}
+                        </button>
                     </div>
                 </div>
             </div>

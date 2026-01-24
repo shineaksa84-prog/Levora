@@ -1,17 +1,40 @@
 import React from 'react';
-import { Users, CheckSquare, TrendingUp, Calendar, Clock, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Users, CheckSquare, Calendar, Clock, AlertCircle, Briefcase } from 'lucide-react';
 
 export default function ManagerDashboard() {
+    const navigate = useNavigate();
+
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-900">Manager Dashboard</h1>
+        <div className="space-y-8 pb-12">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent">
+                            <Briefcase className="w-4 h-4" />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Team Operations</span>
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-none">
+                        Manager <span className="text-primary italic">Command</span>
+                    </h1>
+                    <p className="text-muted-foreground font-medium mt-3 max-w-md">
+                        Orchestrate team performance, approve requests, and monitor operational cadence.
+                    </p>
+                </div>
                 <div className="flex gap-3">
-                    <button className="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50">
-                        Team Calendar
+                    <button
+                        onClick={() => navigate('/app/attendance')}
+                        className="bg-white text-muted-foreground border border-border/50 px-6 py-4 rounded-xl text-xs font-black shadow-sm hover:bg-gray-50 flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                    >
+                        <Calendar className="w-4 h-4" /> Team Calendar
                     </button>
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                        Review Requests
+                    <button
+                        onClick={() => navigate('/app/approvals')}
+                        className="bg-primary text-white px-6 py-4 rounded-xl text-xs font-black shadow-xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                    >
+                        <CheckSquare className="w-4 h-4" /> Review Requests
                     </button>
                 </div>
             </div>

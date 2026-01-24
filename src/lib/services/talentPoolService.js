@@ -33,9 +33,94 @@ export const enrichCandidateProfile = (candidate) => {
         responseRate: candidate.responseRate || Math.floor(Math.random() * 50) + 50,
         averageResponseTimeHours: candidate.averageResponseTimeHours || Math.floor(Math.random() * 48),
 
-        // Sourcing
-        sourceType: candidate.sourceType || 'LinkedIn',
+        // Sourcing (Strategic Tracking)
+        sourceType: candidate.sourceType || ['LinkedIn', 'Referral', 'Alumni', 'Niche Community', 'GitHub'].at(Math.floor(Math.random() * 5)),
+        sourceChannel: candidate.sourceChannel || 'Passive Outreach',
         importedAt: candidate.importedAt || candidate.createdAt,
+
+        // Journey History
+        rejectionDate: candidate.rejectionDate || (candidate.stage === 'Rejected' ? new Date(Date.now() - Math.random() * 1000 * 60 * 60 * 24 * 120).toISOString() : null),
+        rejectionReason: candidate.rejectionReason || (candidate.stage === 'Rejected' ? 'Timing/Headcount' : null),
+
+        // Phase 5: Candidate Experience Metrics
+        sentimentScore: candidate.sentimentScore || Math.floor(Math.random() * 41) + 60, // 60-100 range
+        lastTouchpointAt: candidate.lastTouchpointAt || new Date(Date.now() - Math.floor(Math.random() * 10) * 24 * 60 * 60 * 1000).toISOString(),
+        assignedConcierge: candidate.assignedConcierge || 'Elena G.',
+        journey: candidate.journey || {
+            acknowledged: true,
+            timelineShared: true,
+            prepResourcesSent: Math.random() > 0.5,
+            thankYouSent: Math.random() > 0.7,
+        },
+
+        // Phase 6: Interview Intelligence
+        interviewScores: candidate.interviewScores || {
+            technicalSkills: Math.floor(Math.random() * 5) + 1,
+            communication: Math.floor(Math.random() * 5) + 1,
+            cultureFit: Math.floor(Math.random() * 5) + 1,
+            problemSolving: Math.floor(Math.random() * 5) + 1
+        },
+        decisionVelocityDays: candidate.decisionVelocityDays || Math.floor(Math.random() * 7) + 1,
+        interviewerFeedback: candidate.interviewerFeedback || [
+            { interviewer: 'Sarah Chen', comment: 'Strong technical depth, but needs guidance on architecture.', score: 4, date: '2d ago' },
+            { interviewer: 'Mike Ross', comment: 'Excellent communication and behavioral alignment.', score: 5, date: '1d ago' }
+        ],
+        structuredQuestions: [
+            { question: "Describe a time you navigated a significant ambiguity in requirements.", category: "Behavioral", score: 4 },
+            { question: "How do you optimize a high-traffic SQL query?", category: "Technical", score: 5 }
+        ],
+
+        // Phase 7: Offer & Closing Excellence
+        offerIntelligence: candidate.offerIntelligence || {
+            preOfferCallCompleted: Math.random() > 0.3,
+            compAlignmentScore: Math.floor(Math.random() * 30) + 70, // 70-100%
+            counterOfferRisk: Math.random() > 0.7 ? 'High' : 'Low',
+            offerExpiry: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+            warmingStatus: Math.random() > 0.5 ? 'Warmed' : 'Pending Nudge',
+            reClosed: Math.random() > 0.6,
+            growthPathShared: Math.random() > 0.4
+        },
+
+        // Phase 8: Recruitment Operations & Audit
+        operationsIntelligence: candidate.operationsIntelligence || {
+            cNPS: Math.floor(Math.random() * 40) + 60, // 60-100 range
+            hireQuality90d: Math.floor(Math.random() * 20) + 75, // 75-95%
+            diversityCategory: ['Veteran', 'Neurodivergent', 'Underrepresented', 'None'][Math.floor(Math.random() * 4)],
+            dataIntegrityScore: Math.floor(Math.random() * 21) + 79, // 79-100%
+            timeToHireDays: Math.floor(Math.random() * 15) + 15, // 15-30 days
+            sopCompliance: Math.random() > 0.2,
+            missingTags: Math.random() > 0.8 ? ['Portfolio Missing'] : []
+        },
+        // Phase 9: Recruiter Dashboard & Profile Enhancements
+        recruiterContext: candidate.recruiterContext || {
+            dwellTimeDays: Math.floor(Math.random() * 20) + 1,
+            avgStageDays: 12,
+            duplicateExists: candidate.id === '1',
+            duplicateName: candidate.id === '1' ? 'Sarah Jenkins' : null,
+            feedbackStatus: [
+                { interviewer: 'John Doe', status: 'Submitted', time: '2h ago' },
+                { interviewer: 'Jane Smith', status: 'Pending', time: 'Overdue by 1d' },
+                { interviewer: 'Alex Roe', status: 'Submitted', time: '5h ago' }
+            ],
+            followUpDate: new Date(Date.now() + 86400000 * 2).toISOString(),
+            flags: {
+                compMismatch: Math.random() > 0.7 ? 'Yes' : 'No',
+                noticeRisk: Math.random() > 0.7 ? 'High' : 'Low',
+                locationIssue: 'No',
+                offerRisk: Math.random() > 0.8,
+                prevInterviewed: Math.random() > 0.9
+            },
+            marketSalaryRange: {
+                min: 140000,
+                max: 180000,
+                median: 162000,
+                currency: 'USD'
+            },
+            outreachHistory: [
+                { type: 'Email', date: '2025-12-01', subject: 'Exciting Opportunity at Levora', outcome: 'Replied' },
+                { type: 'LinkedIn', date: '2025-11-15', subject: 'InMail: Senior Software Engineer Role', outcome: 'No Response' }
+            ]
+        }
     };
 };
 
@@ -172,9 +257,23 @@ export const filterCandidates = (candidates, filters) => {
             const match = c.name.toLowerCase().includes(q) ||
                 c.role.toLowerCase().includes(q) ||
                 c.location.toLowerCase().includes(q) ||
-                c.email.toLowerCase().includes(q);
+                c.email.toLowerCase().includes(q) ||
+                (c.tags && c.tags.some(t => t.toLowerCase().includes(q)));
             if (!match) return false;
         }
+
+        // Strategic: Silver Medalists
+        if (filters.isSilverMedalist && !c.isSilverMedalist) return false;
+
+        // Strategic: Quarterly Revisit (Rejected > 90 days ago)
+        if (filters.readyForRevisit) {
+            if (!c.rejectionDate) return false;
+            const diffDays = (new Date() - new Date(c.rejectionDate)) / (1000 * 60 * 60 * 24);
+            if (diffDays < 90) return false;
+        }
+
+        // Strategic: Source Type
+        if (filters.sourceType && filters.sourceType !== 'All' && c.sourceType !== filters.sourceType) return false;
 
         return true;
     });

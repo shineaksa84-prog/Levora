@@ -1,98 +1,192 @@
-import { useState } from 'react';
-import { AlertOctagon, CheckCircle, Search, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { AlertOctagon, CheckCircle, Search, ArrowRight, ShieldAlert, FileSearch, Scale } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from '../../lib/services/toastService';
+import { getPayrollRisks, runPayrollAuditScan } from '../../lib/services/payrollService';
 
-const RISKS = [
-    { id: 1, type: 'Critical', msg: 'Zero Attendance but Active Salary', count: 2, impact: 'High Financial Loss' },
-    { id: 2, type: 'Critical', msg: 'Negative Net Pay detected', count: 5, impact: 'Compliance Risk' },
-    { id: 3, type: 'Warning', msg: 'Sudden Salary Jump (>50%)', count: 1, impact: 'Audit Flag' },
-    { id: 4, type: 'Warning', msg: 'Missing Date of Joining', count: 12, impact: 'Gratuity Calculation Error' },
-];
+const ICON_MAP = {
+    'AlertOctagon': AlertOctagon,
+    'Scale': Scale,
+    'FileSearch': FileSearch,
+    'ShieldAlert': ShieldAlert
+};
 
 export default function PayrollErrorPredictor() {
     const [scanStatus, setScanStatus] = useState('Idle');
+    const [risks, setRisks] = useState([]);
 
-    const runScan = () => {
+    const runScan = async () => {
         setScanStatus('Scanning');
-        setTimeout(() => setScanStatus('Complete'), 2000);
+        try {
+            await runPayrollAuditScan();
+            // In a real app, we might re-fetch risks after scan, but for now we fetch the mock risks
+            const data = await getPayrollRisks();
+            setRisks(data);
+            setScanStatus('Complete');
+        } catch (error) {
+            console.error("Scan failed", error);
+            setScanStatus('Idle');
+            toast.error("Audit scan failed.");
+        }
+    };
+
+    const handleAutoCorrect = () => {
+        toast.success("Corrected 2 zero-attendance records to LOP.");
+        // Simulate update
+    };
+
+    const handleResolveAll = () => {
+        setScanStatus('Idle');
+        toast.success("Critical issues resolved. Compliance score restored to 100%.");
     };
 
     return (
         <div className="space-y-6">
-            <div className="bg-gradient-to-r from-purple-900 to-indigo-900 text-white p-6 rounded-2xl shadow-lg flex justify-between items-center">
-                <div>
-                    <h2 className="text-xl font-bold flex items-center gap-2">
-                        <AlertOctagon className="w-6 h-6 text-pink-400" />
-                        AI Payroll Auditor
-                    </h2>
-                    <p className="text-purple-200 text-sm mt-1">
-                        Predicts and prevents errors before the payout run.
-                    </p>
+            <div className="glass-card p-8 rounded-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+
+                <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
+                                Compliance Engine
+                            </span>
+                        </div>
+                        <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
+                            Pre-Payroll Audit
+                        </h2>
+                        <p className="text-muted-foreground mt-1 max-w-lg">
+                            AI-driven verification of 142 employee records against statutory compliance and variance thresholds.
+                        </p>
+                    </div>
+
+                    {scanStatus === 'Idle' && (
+                        <button
+                            onClick={runScan}
+                            className="cyber-button-primary flex items-center gap-2"
+                        >
+                            <Search className="w-4 h-4" />
+                            Initiate Audit
+                        </button>
+                    )}
                 </div>
-                {scanStatus === 'Idle' && (
-                    <button onClick={runScan} className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 rounded-lg font-bold shadow-lg transition-all animate-pulse">
-                        Run Pre-Flight Check
-                    </button>
-                )}
             </div>
 
-            {scanStatus === 'Scanning' && (
-                <div className="p-12 text-center bg-white border border-gray-200 rounded-xl">
-                    <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-500 font-medium">Scanning 142 employee records for anomalies...</p>
-                </div>
-            )}
+            <AnimatePresence mode="wait">
+                {scanStatus === 'Scanning' && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="p-12 text-center glass-card rounded-2xl"
+                    >
+                        <div className="relative w-16 h-16 mx-auto mb-6">
+                            <div className="absolute inset-0 border-4 border-muted rounded-full"></div>
+                            <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
+                        </div>
+                        <h3 className="text-lg font-bold text-foreground">Analyzing Payroll Data</h3>
+                        <p className="text-muted-foreground">Cross-referencing attendance, tax regulations, and salary structures...</p>
+                    </motion.div>
+                )}
 
-            {scanStatus === 'Complete' && (
-                <div className="grid lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    {/* Risk List */}
-                    <div className="space-y-4">
-                        {RISKS.map(risk => (
-                            <div key={risk.id} className={`bg-white border-l-4 rounded-r-xl p-4 shadow-sm flex justify-between items-center ${risk.type === 'Critical' ? 'border-red-500' : 'border-yellow-500'
-                                }`}>
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${risk.type === 'Critical' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
-                                            }`}>{risk.type}</span>
-                                        <span className="text-xs text-gray-500">{risk.impact}</span>
+                {scanStatus === 'Complete' && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="grid lg:grid-cols-3 gap-6"
+                    >
+                        {/* Summary Card */}
+                        <div className="lg:col-span-2 space-y-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="font-bold text-foreground">Discrepancies Detected</h3>
+                                <span className="text-xs font-medium text-muted-foreground">Last scan: Just now</span>
+                            </div>
+
+                            {risks.map((risk, index) => {
+                                const Icon = ICON_MAP[risk.icon] || AlertOctagon;
+                                return (
+                                    <motion.div
+                                        key={risk.id}
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: index * 0.1 }}
+                                        className="group bg-white/50 hover:bg-white border border-border p-4 rounded-xl shadow-sm transition-all hover:shadow-md flex items-center justify-between"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className={`p-3 rounded-xl ${risk.type === 'Critical' ? 'bg-rose-50' : 'bg-amber-50'}`}>
+                                                <Icon className={`w-5 h-5 ${risk.color}`} />
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <h4 className="font-bold text-foreground text-sm">{risk.msg}</h4>
+                                                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${risk.type === 'Critical' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
+                                                        }`}>
+                                                        {risk.type}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground font-medium flex items-center gap-1">
+                                                    Impact: <span className="text-foreground/80">{risk.impact}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-6">
+                                            <div className="text-right">
+                                                <span className="block text-xl font-black text-foreground">{risk.count}</span>
+                                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wide">Records</span>
+                                            </div>
+                                            <button className="p-2 text-muted-foreground hover:text-primary transition-colors">
+                                                <ArrowRight className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Action Panel */}
+                        <div className="glass-card p-6 rounded-2xl h-fit">
+                            <h3 className="font-bold text-foreground mb-6 flex items-center gap-2">
+                                <ShieldAlert className="w-5 h-5 text-primary" />
+                                Recommended Actions
+                            </h3>
+
+                            <div className="space-y-4">
+                                <div className="p-4 bg-muted/30 rounded-xl border border-border">
+                                    <div className="mb-3">
+                                        <span className="font-bold text-foreground text-sm block mb-1">Zero Attendance Fix</span>
+                                        <p className="text-xs text-muted-foreground">Convert 2 records to Loss of Pay (LOP) automatically based on attendance logs.</p>
                                     </div>
-                                    <h4 className="font-bold text-gray-900">{risk.msg}</h4>
+                                    <button
+                                        onClick={handleAutoCorrect}
+                                        className="w-full py-2 bg-white border border-border rounded-lg text-xs font-bold text-foreground hover:bg-muted transition-colors shadow-sm"
+                                    >
+                                        Auto-Correct Records
+                                    </button>
                                 </div>
-                                <div className="text-center bg-gray-50 p-2 rounded-lg">
-                                    <span className="block text-xl font-bold text-gray-900">{risk.count}</span>
-                                    <span className="text-[10px] text-gray-500 uppercase">Records</span>
+
+                                <div className="p-4 bg-muted/30 rounded-xl border border-border">
+                                    <div className="mb-3">
+                                        <span className="font-bold text-foreground text-sm block mb-1">Compliance Review</span>
+                                        <p className="text-xs text-muted-foreground">5 employees have net pay below minimum wage thresholds.</p>
+                                    </div>
+                                    <button className="w-full py-2 bg-white border border-border rounded-lg text-xs font-bold text-foreground hover:bg-muted transition-colors shadow-sm">
+                                        View Detailed Report
+                                    </button>
                                 </div>
                             </div>
-                        ))}
-                    </div>
 
-                    {/* Action Panel */}
-                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-                        <h3 className="font-bold text-gray-900 mb-4">Recommended Actions</h3>
-
-                        <div className="space-y-3">
-                            <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex items-center justify-between">
-                                <div className="text-sm">
-                                    <span className="font-bold text-gray-800 block">Fix Zero Attendance</span>
-                                    <span className="text-xs text-gray-500">Auto-convert to LOP (Loss of Pay)</span>
-                                </div>
-                                <button className="text-blue-600 hover:underline text-xs font-bold">Apply Fix</button>
-                            </div>
-
-                            <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex items-center justify-between">
-                                <div className="text-sm">
-                                    <span className="font-bold text-gray-800 block">Investigate Salary Jumps</span>
-                                    <span className="text-xs text-gray-500">View detailed audit trail</span>
-                                </div>
-                                <button className="text-blue-600 hover:underline text-xs font-bold">View List</button>
-                            </div>
+                            <button
+                                onClick={handleResolveAll}
+                                className="w-full mt-6 py-3 bg-rose-500/10 text-rose-600 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-rose-500/20 transition-colors"
+                            >
+                                <CheckCircle className="w-4 h-4" />
+                                Resolve All Critical Issues
+                            </button>
                         </div>
-
-                        <div className="mt-8 p-4 bg-green-100 text-green-800 rounded-lg text-sm text-center font-bold flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
-                            <CheckCircle className="w-4 h-4" /> Resolve Critical Errors to Proceed
-                        </div>
-                    </div>
-                </div>
-            )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

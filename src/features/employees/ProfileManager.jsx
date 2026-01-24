@@ -1,15 +1,28 @@
-import { useState } from 'react';
-import { User, Phone, MapPin, FileText, Save, Lock } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function ProfileManager() {
+    const { user, updateUserData } = useAuth();
+    const [isSaving, setIsSaving] = useState(false);
     const [profile, setProfile] = useState({
-        phone: '+91 98765 43210',
-        email: 'alice.smith@acme.com',
-        address: 'Flat 402, Green Valley Apts, Bangalore',
-        emergencyName: 'Bob Smith',
-        emergencyRel: 'Spouse',
-        emergencyPhone: '+91 99999 88888'
+        phone: user?.phone || '+91 98765 43210',
+        email: user?.email || '',
+        address: user?.address || 'Flat 402, Green Valley Apts, Bangalore',
+        emergencyName: user?.emergencyName || 'Bob Smith',
+        emergencyRel: user?.emergencyRel || 'Spouse',
+        emergencyPhone: user?.emergencyPhone || '+91 99999 88888'
     });
+
+    const handleSave = async () => {
+        try {
+            setIsSaving(true);
+            await updateUserData(profile);
+            alert('Profile updated and persisted successfully.');
+        } catch (error) {
+            console.error('Error saving profile:', error);
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     return (
         <div className="flex gap-6 h-[calc(100vh-200px)]">
@@ -93,8 +106,17 @@ export default function ProfileManager() {
                 </div>
 
                 <div className="mt-8 flex justify-end">
-                    <button className="bg-gray-900 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-black flex items-center gap-2">
-                        <Save className="w-4 h-4" /> Save Changes
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="bg-gray-900 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-black flex items-center gap-2 disabled:opacity-50"
+                    >
+                        {isSaving ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                            <Save className="w-4 h-4" />
+                        )}
+                        Save Changes
                     </button>
                 </div>
             </div>

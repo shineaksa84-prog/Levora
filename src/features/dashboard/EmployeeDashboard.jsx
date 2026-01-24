@@ -19,6 +19,9 @@ import CourseCatalog from '../learning/CourseCatalog';
 import LearningPaths from '../learning/LearningPaths';
 import CertificationVault from '../learning/CertificationVault';
 import MentorshipMatching from '../learning/MentorshipMatching';
+import SkillsMatrix from '../learning/SkillsMatrix';
+import HRHelpdesk from '../helpdesk/HRHelpdesk';
+import DocumentVault from '../documents/DocumentVault';
 
 export default function EmployeeDashboard() {
     const [view, setView] = useState('home');
@@ -43,58 +46,71 @@ export default function EmployeeDashboard() {
         },
         {
             title: "Learning Goat 🐐",
-            content: "You completed the 'Advanced React' module. Keep learning!",
+            content: "You completed the 'Advanced React' phase. Keep learning!",
             background: "linear-gradient(to bottom right, #10b981, #3b82f6)",
             image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop"
         }
     ];
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center bg-white/40 p-4 rounded-2xl backdrop-blur-sm border border-white/20">
+        <div className="space-y-8 pb-12">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-amber-600 flex items-center gap-2">
-                        <Coffee className="w-6 h-6 text-orange-500" />
-                        Good Morning, {user.name}
-                    </h1>
-                    <div className="flex items-center gap-3">
-                        <p className="text-sm text-gray-500 font-medium mt-1">Ready to make an impact today?</p>
-                        <MagneticButton
-                            onClick={() => {
-                                setShowStory(true);
-                                setShowConfetti(true);
-                                setTimeout(() => setShowConfetti(false), 2000);
-                            }}
-                            className="bg-gradient-to-r from-pink-500 to-violet-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-glow hover:scale-105 transition-transform"
-                        >
-                            View Weekly Recap 🎥
-                        </MagneticButton>
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent">
+                            <Coffee className="w-4 h-4" />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Employee Portal</span>
                     </div>
+                    <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-none flex items-center gap-3">
+                        Good Morning, <span className="text-primary italic">{user.name}</span>
+                    </h1>
+                    <p className="text-muted-foreground font-medium mt-3">
+                        Ready to make an impact today?
+                    </p>
                 </div>
+                <div className="flex items-center gap-3">
+                    <MagneticButton
+                        onClick={() => {
+                            setShowStory(true);
+                            setShowConfetti(true);
+                            setTimeout(() => setShowConfetti(false), 2000);
+                        }}
+                        className="bg-gradient-to-r from-pink-500 to-violet-500 text-white text-xs font-black px-6 py-4 rounded-full shadow-xl hover:scale-105 transition-transform flex items-center gap-2"
+                    >
+                        <span>View Weekly Recap</span> <span className="text-lg">🎥</span>
+                    </MagneticButton>
+                </div>
+            </div>
 
-                <div className="flex gap-1 bg-white/50 p-1.5 rounded-xl border border-white/20 shadow-sm overflow-x-auto max-w-2xl scrollbar-hide">
-                    {[
-                        { id: 'home', label: 'Home' },
-                        { id: 'mood', label: 'Wellness' },
-                        { id: 'recognition', label: 'Kudos' },
-                        { id: 'directory', label: 'Directory' },
-                        { id: 'org', label: 'Org Chart' },
-                        { id: 'jobs', label: 'Jobs' },
-                        { id: 'skills', label: 'Skills' },
-                        { id: 'learning', label: 'Learning' },
-                        { id: 'mentorship', label: 'Mentors' },
-                        { id: 'holidays', label: 'Holidays' },
-                        { id: 'profile', label: 'Profile' }
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setView(tab.id)}
-                            className={`px-3 py-1.5 text-xs font-bold rounded-lg whitespace-nowrap transition-all duration-200 ${view === tab.id ? 'bg-white text-orange-600 shadow-md transform scale-105' : 'text-gray-500 hover:text-gray-800 hover:bg-white/30'}`}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
+            {/* Navigation Pills */}
+            <div className="flex bg-muted/50 p-1.5 rounded-[2rem] border border-border/50 w-full overflow-x-auto no-scrollbar">
+                {[
+                    { id: 'home', label: 'Home' },
+                    { id: 'mood', label: 'Wellness' },
+                    { id: 'recognition', label: 'Kudos' },
+                    { id: 'directory', label: 'Directory' },
+                    { id: 'org', label: 'Org Chart' },
+                    { id: 'jobs', label: 'Jobs' },
+                    { id: 'skills', label: 'Skills' },
+                    { id: 'learning', label: 'Learning' },
+                    { id: 'mentorship', label: 'Mentors' },
+                    { id: 'holidays', label: 'Holidays' },
+                    { id: 'profile', label: 'Profile' },
+                    { id: 'helpdesk', label: 'Helpdesk' }
+                ].map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setView(tab.id)}
+                        className={`px-6 py-3 rounded-2xl text-xs font-black transition-all whitespace-nowrap ${view === tab.id
+                            ? 'bg-white text-orange-600 shadow-lg shadow-orange-500/10'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-white/50'
+                            }`}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
             </div>
 
             {view === 'mood' && <MoodTracker />}
@@ -102,7 +118,9 @@ export default function EmployeeDashboard() {
             {view === 'directory' && <CompanyDirectory />}
             {view === 'org' && <OrgChart />}
             {view === 'jobs' && <InternalJobs />}
-            {view === 'skills' && <div className="p-10 text-center text-gray-500">Skills Component Placeholder</div>}
+            {view === 'skills' && <SkillsMatrix />}
+            {view === 'helpdesk' && <HRHelpdesk />}
+            {view === 'docs' && <DocumentVault />}
             {view === 'learning' && (
                 <div className="space-y-6">
                     <CourseCatalog />

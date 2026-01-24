@@ -1,14 +1,22 @@
-import { useState } from 'react';
-import { LifeBuoy, Plus, MessageSquare, Clock, CheckCircle, Search } from 'lucide-react';
-
-const MOCK_TICKETS = [
-    { id: 'TKT-1001', subject: 'Laptop battery draining fast', category: 'IT Support', date: '2023-12-05', status: 'In Progress', priority: 'Medium' },
-    { id: 'TKT-1002', subject: 'Payslip Discrepancy - Nov', category: 'Payroll', date: '2023-12-01', status: 'Resolved', priority: 'High' },
-    { id: 'TKT-1003', subject: 'Need access to Jira', category: 'Access Request', date: '2023-12-06', status: 'Open', priority: 'Low' },
-];
+import { useState, useEffect } from 'react';
+import { LifeBuoy, Plus, MessageSquare, Clock, CheckCircle, Search, X, Loader2, AlertCircle } from 'lucide-react';
+import { getTickets, createTicket } from '../../lib/services/ticketService';
 
 export default function RequestCenter() {
-    const [tickets, setTickets] = useState(MOCK_TICKETS);
+    const [tickets, setTickets] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [showAddModal, setShowAddModal] = useState(false);
+
+    useEffect(() => {
+        loadTickets();
+    }, []);
+
+    const loadTickets = async () => {
+        setLoading(true);
+        const data = await getTickets('EMP-001'); // Mock ID
+        setTickets(data);
+        setLoading(false);
+    };
 
     return (
         <div className="space-y-6">
@@ -20,7 +28,10 @@ export default function RequestCenter() {
                     </h2>
                     <p className="text-sm text-gray-500">Raise requests and track their resolution.</p>
                 </div>
-                <button className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-black shadow-sm transition-colors">
+                <button
+                    onClick={() => setShowAddModal(true)}
+                    className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-black shadow-sm transition-colors"
+                >
                     <Plus className="w-4 h-4" /> New Ticket
                 </button>
             </div>
@@ -58,12 +69,18 @@ export default function RequestCenter() {
 
                     <div className="overflow-y-auto flex-1">
                         <div className="divide-y divide-gray-100">
-                            {tickets.map(ticket => (
+                            {loading ? (
+                                <div className="p-12 text-center text-gray-400">
+                                    <Loader2 className="w-8 h-8 animate-spin mx-auto opacity-20" />
+                                </div>
+                            ) : tickets.length === 0 ? (
+                                <div className="p-12 text-center text-gray-400 italic text-sm">No tickets found in the resolution matrix.</div>
+                            ) : tickets.map(ticket => (
                                 <div key={ticket.id} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between group cursor-pointer">
                                     <div className="flex items-center gap-4">
                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${ticket.status === 'Resolved' ? 'bg-green-100 text-green-600' :
-                                                ticket.status === 'In Progress' ? 'bg-blue-100 text-blue-600' :
-                                                    'bg-yellow-100 text-yellow-600'
+                                            ticket.status === 'In Progress' ? 'bg-blue-100 text-blue-600' :
+                                                'bg-yellow-100 text-yellow-600'
                                             }`}>
                                             {ticket.status === 'Resolved' ? <CheckCircle className="w-5 h-5" /> :
                                                 ticket.status === 'In Progress' ? <Clock className="w-5 h-5" /> :
@@ -83,8 +100,8 @@ export default function RequestCenter() {
 
                                     <div className="flex flex-col items-end gap-1">
                                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ticket.status === 'Resolved' ? 'bg-gray-100 text-gray-600' :
-                                                ticket.status === 'In Progress' ? 'bg-blue-50 text-blue-700' :
-                                                    'bg-yellow-50 text-yellow-700'
+                                            ticket.status === 'In Progress' ? 'bg-blue-50 text-blue-700' :
+                                                'bg-yellow-50 text-yellow-700'
                                             }`}>
                                             {ticket.status}
                                         </span>
@@ -97,6 +114,129 @@ export default function RequestCenter() {
                         </div>
                     </div>
                 </div>
+            </div>
+            {showAddModal && (
+                <NewTicketModal
+                    onClose={() => setShowAddModal(false)}
+                    onSuccess={() => {
+                        setShowAddModal(false);
+                        loadTickets();
+                    }}
+                />
+            )}
+        </div>
+    );
+}
+
+function NewTicketModal({ onClose, onSuccess }) {
+    const [formData, setFormData] = useState({
+        subject: '',
+        category: 'IT Support',
+        priority: 'Medium',
+        description: '',
+        employeeId: 'EMP-001'
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            await createTicket({
+                ...formData,
+                date: new Date().toISOString().split('T')[0]
+            });
+            onSuccess();
+        } catch (err) {
+            setError('System error: Ticket could not be synchronized with the helpdesk.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="bg-gray-900 p-6 text-white flex justify-between items-center">
+                    <div>
+                        <h3 className="text-xl font-bold">Initiate Service Request</h3>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Support Matrix Protocol</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    {error && (
+                        <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-xs font-bold flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4" /> {error}
+                        </div>
+                    )}
+
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Subject</label>
+                        <input
+                            required
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white font-bold text-sm outline-none transition-all"
+                            value={formData.subject}
+                            onChange={e => setFormData({ ...formData, subject: e.target.value })}
+                            placeholder="Brief summary of the issue"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Category</label>
+                            <select
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 font-bold text-sm outline-none"
+                                value={formData.category}
+                                onChange={e => setFormData({ ...formData, category: e.target.value })}
+                            >
+                                <option>IT Support</option>
+                                <option>Payroll</option>
+                                <option>HR General</option>
+                                <option>Facilities</option>
+                                <option>Access Request</option>
+                            </select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Priority</label>
+                            <select
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 font-bold text-sm outline-none"
+                                value={formData.priority}
+                                onChange={e => setFormData({ ...formData, priority: e.target.value })}
+                            >
+                                <option>Low</option>
+                                <option>Medium</option>
+                                <option>High</option>
+                                <option>Urgent</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Detailed Description</label>
+                        <textarea
+                            required
+                            rows={3}
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 font-medium text-sm outline-none resize-none focus:bg-white transition-all"
+                            placeholder="Provide full context for faster resolution..."
+                            value={formData.description}
+                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-gray-900 text-white py-4 rounded-xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-xl shadow-gray-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                    >
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                        Submit Request
+                    </button>
+                </form>
             </div>
         </div>
     );

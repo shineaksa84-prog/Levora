@@ -1,28 +1,57 @@
-import { useState } from 'react';
-import { Building, Users, MoreVertical, Plus, Check, Search, ShieldOff } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Building, Users, MoreVertical, Plus, Check, Search, ShieldOff, Loader2 } from 'lucide-react';
+import TenantService from '../../lib/services/tenantService';
+import EmptyState from '../../components/ui/EmptyState';
+import useStore from '../../store/useStore';
 
 export default function TenantManagement() {
     const [searchTerm, setSearchTerm] = useState('');
+    const [tenants, setTenants] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const addNotification = useStore(state => state.addNotification);
 
-    const tenants = [
-        { id: 1, name: 'Tech Solutions Inc', domain: 'techsolutions.com', plan: 'Enterprise', users: 145, status: 'Active', joined: 'Oct 2024' },
-        { id: 2, name: 'Global Logistics', domain: 'globallogistics.io', plan: 'Pro', users: 42, status: 'Active', joined: 'Nov 2024' },
-        { id: 3, name: 'Startup Hub', domain: 'startuphub.co', plan: 'Starter', users: 8, status: 'Trial', joined: 'Dec 2024' },
-        { id: 4, name: 'Legacy Corp', domain: 'legacycorp.net', plan: 'Pro', users: 89, status: 'Suspended', joined: 'Jan 2024' },
-    ];
+    useEffect(() => {
+        async function load() {
+            try {
+                const data = await TenantService.getTenants();
+                setTenants(data);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        }
+        load();
+    }, []);
 
-    return (
+    const handleAddCompany = async () => {
+        // Implementation of onboarding modal/logic would go here
+        addNotification({
+            title: 'Protocol Initiated',
+            message: 'Onboarding flow for new company workspace ready.',
+            type: 'info'
+        });
+    };
+
+    if (loading) return (
+        <div className="flex items-center justify-center p-20">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+    );
+
+    if (tenants.length === 0) return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Tenant Management</h1>
-                    <p className="text-muted-foreground mt-1">Manage client companies and their subscriptions.</p>
-                </div>
-                <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors flex items-center gap-2">
-                    <Plus className="w-4 h-4" />
-                    Add Company
-                </button>
-            </div>
+            <h1 className="text-3xl font-black tracking-tighter">Tenant Intelligence</h1>
+            <EmptyState
+                title="No Active Worskpaces"
+                description="Your ecosystem is currently void of company tenants. Ready to onboard your first enterprise partner?"
+                icon={Building}
+                actionLabel="Onboard Company"
+                onAction={handleAddCompany}
+            />
+        </div>
+    );
+
 
             <div className="flex items-center gap-4 bg-card p-4 rounded-lg border border-border shadow-sm">
                 <div className="relative flex-1">
@@ -110,6 +139,6 @@ export default function TenantManagement() {
                     </tbody>
                 </table>
             </div>
-        </div>
+        </div >
     );
 }

@@ -30,6 +30,9 @@ export default function Breadcrumb() {
 
     let currentPath = '';
     pathnames.forEach((segment, index) => {
+        // Skip 'app' root segment to avoid duplicate Home/Dashboard link
+        if (segment === 'app' && index === 0) return;
+
         currentPath += `/${segment}`;
 
         // Check if it's a dynamic ID (numeric or UUID-like)

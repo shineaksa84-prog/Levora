@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UserPlus, X } from 'lucide-react';
+import { UserPlus, X, AlertCircle } from 'lucide-react';
 import { convertCandidateToEmployee } from '../../lib/services/hiringFlow';
 
 export default function HireCandidateModal({ candidate, onClose, onSuccess }) {
@@ -61,7 +61,8 @@ export default function HireCandidateModal({ candidate, onClose, onSuccess }) {
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                     {error && (
-                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm">
+                        <div className="flex items-center gap-3 p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm font-bold animate-in fade-in slide-in-from-top-2">
+                            <AlertCircle className="w-4 h-4 shrink-0" />
                             {error}
                         </div>
                     )}

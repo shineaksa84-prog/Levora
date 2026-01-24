@@ -1,12 +1,17 @@
 import { useState } from 'react';
-import { Calendar as CalendarIcon, Clock, MapPin, Video, MoreHorizontal, Plus, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MapPin, Video, MoreHorizontal, Plus, ChevronLeft, ChevronRight, Filter, Star, X, Check, Loader2, Sparkles } from 'lucide-react';
+import { submitInterviewFeedback } from '../lib/services/interviewFeedbackService';
+import FeedbackGenerator from '../features/recruitment/FeedbackGenerator';
 
 export default function Interviews() {
     const [view, setView] = useState('list'); // 'list' or 'calendar'
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [selectedInterview, setSelectedInterview] = useState(null);
 
     const upcomingInterviews = [
         {
             id: 1,
+            candidateId: "cand_1",
             candidate: "Sarah Wilson",
             role: "Senior Product Designer",
             type: "Technical Interview",
@@ -18,6 +23,7 @@ export default function Interviews() {
         },
         {
             id: 2,
+            candidateId: "cand_2",
             candidate: "James Chen",
             role: "Frontend Developer",
             type: "Initial Screen",
@@ -29,6 +35,7 @@ export default function Interviews() {
         },
         {
             id: 3,
+            candidateId: "cand_3",
             candidate: "Alex Thompson",
             role: "Product Manager",
             type: "Final Round",
@@ -39,6 +46,11 @@ export default function Interviews() {
             platform: "In-person"
         }
     ];
+
+    const handleFeedbackSubmit = (interview) => {
+        setSelectedInterview(interview);
+        setShowFeedbackModal(true);
+    };
 
     return (
         <div className="space-y-6">
@@ -106,13 +118,22 @@ export default function Interviews() {
                                         <p className="text-sm text-muted-foreground">{interview.interviewer}</p>
                                     </div>
                                     <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${interview.status === 'Confirmed' ? 'bg-green-100 text-green-700 border-green-200' :
-                                            'bg-yellow-100 text-yellow-700 border-yellow-200'
+                                        'bg-yellow-100 text-yellow-700 border-yellow-200'
                                         }`}>
                                         {interview.status}
                                     </span>
-                                    <button className="p-2 hover:bg-accent rounded-full text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100">
-                                        <MoreHorizontal className="w-5 h-5" />
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => handleFeedbackSubmit(interview)}
+                                            className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-1.5"
+                                        >
+                                            <Star className="w-3 h-3 text-yellow-300" />
+                                            Submit Feedback
+                                        </button>
+                                        <button className="p-2 hover:bg-accent rounded-full text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100">
+                                            <MoreHorizontal className="w-5 h-5" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -164,6 +185,186 @@ export default function Interviews() {
                     </div>
                 </div>
             )}
+
+            {showFeedbackModal && (
+                <FeedbackModal
+                    interview={selectedInterview}
+                    onClose={() => setShowFeedbackModal(false)}
+                />
+            )}
+        </div>
+    );
+}
+
+function FeedbackModal({ interview, onClose }) {
+    const [activeTab, setActiveTab] = useState('eval'); // 'eval' or 'ai'
+    const [formData, setFormData] = useState({
+        technicalSkills: { programming: 0, problemSolving: 0, systemDesign: 0, codeQuality: 0 },
+        softSkills: { communication: 0, teamwork: 0, leadership: 0, adaptability: 0 },
+        cultureFit: 0,
+        overallRating: 0,
+        notes: '',
+        recommendation: 'pending'
+    });
+    const [submitting, setSubmitting] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            await submitInterviewFeedback(interview.candidateId, {
+                ...formData,
+                interviewerId: 'mike_j',
+                interviewerName: 'Mike Johnson'
+            });
+            alert('Feedback submitted successfully and linked to candidate profile.');
+            onClose();
+        } catch (error) {
+            console.error(error);
+            alert('Operation failed.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const renderRating = (category, key, value) => (
+        <div key={key} className="flex items-center justify-between group">
+            <span className="text-sm text-gray-600 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+            <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                        key={star}
+                        type="button"
+                        onClick={() => setFormData(prev => ({
+                            ...prev,
+                            [category]: { ...prev[category], [key]: star }
+                        }))}
+                        className={`p-1 transition-colors ${value >= star ? 'text-yellow-400' : 'text-gray-200 hover:text-yellow-200'}`}
+                    >
+                        <Star className="w-4 h-4 fill-current" />
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-250 flex flex-col max-h-[90vh]">
+                <div className="bg-indigo-600 p-6 text-white flex justify-between items-center">
+                    <div>
+                        <h3 className="text-xl font-bold tracking-tight text-white m-0">Interviewer Evaluation Matrix</h3>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-indigo-200 mt-1">Candidate: {interview.candidate} / Role: {interview.role}</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                        <X className="w-5 h-5 text-white" />
+                    </button>
+                </div>
+
+                <div className="flex border-b border-gray-100">
+                    <button
+                        onClick={() => setActiveTab('eval')}
+                        className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-colors ${activeTab === 'eval' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/30' : 'text-gray-400 hover:bg-gray-50'}`}
+                    >
+                        Standard Evaluation
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('ai')}
+                        className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 ${activeTab === 'ai' ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50/30' : 'text-gray-400 hover:bg-gray-50'}`}
+                    >
+                        <Sparkles className="w-3 h-3" /> AI Feedback Synthesis
+                    </button>
+                </div>
+
+                <div className="overflow-y-auto p-6 flex-1">
+                    {activeTab === 'eval' ? (
+                        <form id="feedback-form" onSubmit={handleSubmit} className="space-y-8">
+                            <div className="grid md:grid-cols-2 gap-8">
+                                <div className="space-y-4">
+                                    <h4 className="text-[11px] font-black uppercase tracking-widest text-indigo-600 border-b border-indigo-100 pb-2">Technical Core</h4>
+                                    <div className="space-y-3">
+                                        {Object.entries(formData.technicalSkills).map(([key, value]) => renderRating('technicalSkills', key, value))}
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <h4 className="text-[11px] font-black uppercase tracking-widest text-indigo-600 border-b border-indigo-100 pb-2">Soft Assets</h4>
+                                    <div className="space-y-3">
+                                        {Object.entries(formData.softSkills).map(([key, value]) => renderRating('softSkills', key, value))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-8">
+                                <div className="space-y-3">
+                                    <h4 className="text-[11px] font-black uppercase tracking-widest text-indigo-600">Culture Fit Protocol</h4>
+                                    <div className="flex gap-2">
+                                        {[1, 2, 3, 4, 5].map(star => (
+                                            <button
+                                                key={star}
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, cultureFit: star })}
+                                                className={`p-1.5 rounded-lg border transition-all ${formData.cultureFit >= star ? 'bg-indigo-50 border-indigo-200 text-indigo-600' : 'bg-gray-50 border-gray-200 text-gray-300 hover:border-indigo-100'}`}
+                                            >
+                                                <Star className="w-5 h-5 fill-current" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="space-y-3">
+                                    <h4 className="text-[11px] font-black uppercase tracking-widest text-indigo-600">Strategic Recommendation</h4>
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, recommendation: 'hire' })}
+                                            className={`flex-1 py-2 text-[10px] font-black uppercase tracking-tighter rounded-lg border transition-all ${formData.recommendation === 'hire' ? 'bg-green-600 border-green-600 text-white' : 'bg-gray-50 border-gray-200 text-gray-400 hover:bg-green-50'}`}
+                                        >
+                                            Recommend Hire
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, recommendation: 'reject' })}
+                                            className={`flex-1 py-2 text-[10px] font-black uppercase tracking-tighter rounded-lg border transition-all ${formData.recommendation === 'reject' ? 'bg-red-600 border-red-600 text-white' : 'bg-gray-50 border-gray-200 text-gray-400 hover:bg-red-50'}`}
+                                        >
+                                            Reject Candidate
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[11px] font-black uppercase tracking-widest text-indigo-600">Synthesis / Key Observations</label>
+                                <textarea
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 font-medium text-sm min-h-[100px] outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                                    placeholder="Summarize the candidate's performance, key highlights, and mission-critical observations..."
+                                    value={formData.notes}
+                                    onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                                />
+                            </div>
+                        </form>
+                    ) : (
+                        <div className="h-full overflow-y-auto">
+                            <FeedbackGenerator isInterviewerMode={true} />
+                        </div>
+                    )}
+                </div>
+
+                <div className="p-6 bg-gray-50 border-t border-gray-100 flex gap-3">
+                    <button
+                        onClick={onClose}
+                        className="flex-1 py-3 font-bold text-gray-600 hover:text-gray-900 text-sm transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        disabled={submitting}
+                        onClick={handleSubmit}
+                        className="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                    >
+                        {submitting ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <Check className="w-4 h-4 text-white" />}
+                        Commit Evaluation
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }

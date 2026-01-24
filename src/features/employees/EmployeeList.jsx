@@ -6,8 +6,9 @@ import { SmartDataGrid } from '../../components/ui/SmartDataGrid';
 
 // Static employees removed, using state instead
 
-import { getEmployees, seedEmployees } from '../../lib/services/employeeService';
+import { getEmployees, seedEmployees, updateEmployeeStatus } from '../../lib/services/employeeService';
 import { Loader2 } from 'lucide-react';
+import { toast } from '../../lib/services/toastService';
 
 export default function EmployeeList() {
     const [employees, setEmployees] = useState([]);
@@ -44,18 +45,27 @@ export default function EmployeeList() {
         {
             label: 'View Profile',
             icon: <Eye className="w-4 h-4" />,
-            onClick: () => console.log('View profile', employee.id)
+            onClick: () => window.location.hash = `#/employees/${employee.id}`
         },
         {
             label: 'Edit Details',
             icon: <FileEdit className="w-4 h-4" />,
-            onClick: () => console.log('Edit', employee.id)
+            onClick: () => toast.info(`Editing ${employee.name}... (Modal Opening)`)
         },
         {
-            label: 'Suspend Account',
+            label: employee.status === 'Suspended' ? 'Activate Account' : 'Suspend Account',
             icon: <Ban className="w-4 h-4" />,
-            onClick: () => console.log('Suspend', employee.id),
-            danger: true
+            onClick: async () => {
+                try {
+                    const newStatus = employee.status === 'Suspended' ? 'Active' : 'Suspended';
+                    await updateEmployeeStatus(employee.id, newStatus);
+                    toast.success(`Employee ${newStatus === 'Suspended' ? 'suspended' : 'activated'} successfully.`);
+                    fetchEmployees(); // Refresh list
+                } catch (error) {
+                    toast.error("Failed to update status.");
+                }
+            },
+            danger: employee.status !== 'Suspended'
         }
     ];
 

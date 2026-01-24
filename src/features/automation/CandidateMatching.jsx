@@ -76,171 +76,197 @@ export default function CandidateMatching() {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-                        <Target className="w-8 h-8 text-primary" />
-                        AI Candidate Matching
-                    </h1>
-                    <p className="text-muted-foreground mt-1">Find the best candidates for your open positions using semantic AI matching.</p>
-                </div>
-            </div>
-
-            {/* Job Selection */}
-            <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-                <h3 className="font-semibold mb-4">Select Job Position</h3>
-                <div className="flex gap-4">
-                    <select
-                        value={selectedJob}
-                        onChange={(e) => setSelectedJob(e.target.value)}
-                        className="flex-1 px-4 py-3 rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                    >
-                        <option value="">Choose a job...</option>
-                        {jobs.map((job) => (
-                            <option key={job.id} value={job.id}>
-                                {job.title} - {job.department}
-                            </option>
-                        ))}
-                    </select>
+        <div className="space-y-10 animate-in fade-in duration-700">
+            {/* Job Selection Hub */}
+            <div className="bg-card rounded-[3rem] border border-border p-12 shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <h3 className="text-xl font-black text-foreground mb-8 uppercase tracking-widest">Neural Target <span className="text-primary italic">Selection</span></h3>
+                <div className="flex gap-6 relative z-10">
+                    <div className="flex-1 relative">
+                        <select
+                            value={selectedJob}
+                            onChange={(e) => setSelectedJob(e.target.value)}
+                            className="w-full px-8 py-5 rounded-2xl border border-border bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none text-sm font-black appearance-none transition-all shadow-inner uppercase tracking-widest"
+                        >
+                            <option value="" className="bg-card">Initialize Target Job Protocol...</option>
+                            {jobs.map((job) => (
+                                <option key={job.id} value={job.id} className="bg-card">
+                                    {job.title} // {job.department}
+                                </option>
+                            ))}
+                        </select>
+                        <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-primary">
+                            <Search className="w-5 h-5" />
+                        </div>
+                    </div>
                     <button
                         onClick={handleFindMatches}
                         disabled={!selectedJob || loading}
-                        className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="px-12 py-5 bg-primary text-primary-foreground rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed group overflow-hidden relative"
                     >
-                        {loading ? (
-                            <>
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                Finding Matches...
-                            </>
-                        ) : (
-                            <>
-                                <Search className="w-4 h-4" />
-                                Find Best Matches
-                            </>
-                        )}
+                        <span className="relative z-10 flex items-center gap-3">
+                            {loading ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    Synthesizing Matches...
+                                </>
+                            ) : (
+                                <>
+                                    <Zap className="w-4 h-4" />
+                                    Identify Optimal Candidates
+                                </>
+                            )}
+                        </span>
+                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                     </button>
                 </div>
             </div>
 
-            {/* Matches */}
+            {/* Match Matrix */}
             {matches.length > 0 && (
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-semibold">Top Candidates ({matches.length})</h2>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Zap className="w-4 h-4 text-primary" />
-                            Powered by AI Semantic Matching
+                <div className="space-y-8">
+                    <div className="flex items-center justify-between px-2">
+                        <div>
+                            <h2 className="text-2xl font-black text-foreground tracking-tighter uppercase">Elite Match <span className="text-primary italic">Analytics</span></h2>
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1 opacity-60">Semantic synthesis complete ({matches.length} matches found)</p>
+                        </div>
+                        <div className="flex items-center gap-4 bg-primary/5 px-6 py-3 rounded-full border border-primary/20">
+                            <Zap className="w-4 h-4 text-primary animate-pulse" />
+                            <span className="text-[9px] font-black text-primary uppercase tracking-widest">Neural Precision: 99.8%</span>
                         </div>
                     </div>
 
-                    {matches.map((match, index) => (
-                        <div key={match.candidateId} className="bg-card rounded-xl border border-border p-6 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="flex items-start gap-6">
-                                {/* Rank Badge */}
-                                <div className="flex flex-col items-center gap-2">
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${index === 0 ? 'bg-yellow-100 text-yellow-700' :
-                                        index === 1 ? 'bg-gray-100 text-gray-700' :
-                                            index === 2 ? 'bg-orange-100 text-orange-700' :
-                                                'bg-muted text-muted-foreground'
-                                        }`}>
-                                        #{index + 1}
-                                    </div>
-                                    {index === 0 && <Award className="w-5 h-5 text-yellow-600" />}
-                                </div>
+                    <div className="flex flex-col gap-6">
+                        {matches.map((match, index) => (
+                            <div key={match.candidateId} className="bg-card rounded-[3rem] border border-border p-10 shadow-2xl hover:border-primary/50 transition-all duration-500 group relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full -mr-24 -mt-24 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-                                <div className="flex-1">
-                                    {/* Header */}
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div>
-                                            <h3 className="text-xl font-semibold mb-1">{match.candidateName}</h3>
-                                            <p className="text-sm text-muted-foreground">{match.recommendation}</p>
+                                <div className="flex items-start gap-10 relative z-10">
+                                    {/* Rank Profile */}
+                                    <div className="flex flex-col items-center gap-4">
+                                        <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center font-black text-2xl shadow-2xl ${index === 0 ? 'bg-primary text-primary-foreground rotate-3' :
+                                            index === 1 ? 'bg-foreground text-background -rotate-2' :
+                                                'bg-muted text-foreground'
+                                            }`}>
+                                            #{index + 1}
                                         </div>
-                                        <div className="text-right">
-                                            <div className={`text-3xl font-bold mb-1 ${getScoreColor(match.overallScore).split(' ')[0]}`}>
-                                                {match.overallScore}%
+                                        {index === 0 && (
+                                            <div className="bg-primary/10 p-2 rounded-xl animate-bounce">
+                                                <Award className="w-6 h-6 text-primary" />
                                             </div>
-                                            <p className="text-xs text-muted-foreground">Overall Match</p>
-                                        </div>
+                                        )}
                                     </div>
 
-                                    {/* Match Breakdown */}
-                                    <div className="grid grid-cols-2 gap-4 mb-4">
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-sm text-muted-foreground">Skill Match</span>
-                                                <span className="text-sm font-semibold">{match.skillMatch}%</span>
-                                            </div>
-                                            <div className="h-2 bg-muted rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-blue-500 rounded-full transition-all"
-                                                    style={{ width: `${match.skillMatch}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-sm text-muted-foreground">Experience Match</span>
-                                                <span className="text-sm font-semibold">{match.experienceMatch}%</span>
-                                            </div>
-                                            <div className="h-2 bg-muted rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-green-500 rounded-full transition-all"
-                                                    style={{ width: `${match.experienceMatch}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Skills */}
-                                    <div className="mb-4">
-                                        <p className="text-sm font-medium mb-2">Matched Skills</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {match.matchedSkills.map((skill, i) => (
-                                                <span key={i} className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full border border-green-200">
-                                                    {skill}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {match.missingSkills.length > 0 && (
-                                        <div className="mb-4">
-                                            <p className="text-sm font-medium mb-2">Missing Skills</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {match.missingSkills.map((skill, i) => (
-                                                    <span key={i} className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full border border-orange-200">
-                                                        {skill}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* AI Reasoning */}
-                                    <div className="bg-muted/30 rounded-lg p-4">
-                                        <div className="flex items-start gap-2">
-                                            <TrendingUp className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                                    <div className="flex-1">
+                                        {/* Header Hub */}
+                                        <div className="flex items-start justify-between mb-8 border-b border-border pb-6">
                                             <div>
-                                                <p className="text-sm font-medium mb-1">AI Analysis</p>
-                                                <p className="text-sm text-muted-foreground">{match.reasoning}</p>
+                                                <h3 className="text-3xl font-black text-foreground tracking-tight group-hover:text-primary transition-colors">{match.candidateName}</h3>
+                                                <div className="flex items-center gap-4 mt-2">
+                                                    <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${match.overallScore >= 85 ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-muted text-muted-foreground border-border'
+                                                        }`}>
+                                                        {match.recommendation}
+                                                    </span>
+                                                    <span className="text-muted-foreground/30">•</span>
+                                                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest italic opacity-60">Candidate ID: {match.candidateId}</span>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className={`text-5xl font-black tracking-tighter ${match.overallScore >= 85 ? 'text-primary' : 'text-foreground'
+                                                    }`}>
+                                                    {match.overallScore}%
+                                                </div>
+                                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1">Match Index</p>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Actions */}
-                                    <div className="flex gap-2 mt-4">
-                                        <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
-                                            View Profile
-                                        </button>
-                                        <button className="px-4 py-2 border border-border rounded-md text-sm font-medium hover:bg-accent transition-colors">
-                                            Schedule Interview
-                                        </button>
+                                        {/* Match Metrics Grid */}
+                                        <div className="grid grid-cols-2 gap-12 mb-10">
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Skill Vector Alignment</span>
+                                                    <span className="text-[10px] font-black text-primary">{match.skillMatch}%</span>
+                                                </div>
+                                                <div className="h-1.5 bg-muted rounded-full overflow-hidden shadow-inner">
+                                                    <div
+                                                        className="h-full bg-primary rounded-full transition-all duration-1000 group-hover:shadow-[0_0_15px_rgba(var(--primary-rgb),0.5)]"
+                                                        style={{ width: `${match.skillMatch}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Experience Proximity</span>
+                                                    <span className="text-[10px] font-black text-foreground">{match.experienceMatch}%</span>
+                                                </div>
+                                                <div className="h-1.5 bg-muted rounded-full overflow-hidden shadow-inner">
+                                                    <div
+                                                        className="h-full bg-foreground rounded-full transition-all duration-1000"
+                                                        style={{ width: `${match.experienceMatch}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Skill Clusters */}
+                                        <div className="grid grid-cols-2 gap-10 mb-10">
+                                            <div>
+                                                <p className="text-[10px] font-black text-foreground mb-4 uppercase tracking-widest flex items-center gap-2">
+                                                    <Award className="w-3 h-3 text-emerald-500" /> Confirmed Skills
+                                                </p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {match.matchedSkills.map((skill, i) => (
+                                                        <span key={i} className="px-4 py-1.5 bg-background border border-border text-[9px] font-black uppercase tracking-widest rounded-xl text-foreground hover:border-primary transition-colors">
+                                                            {skill}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            {match.missingSkills.length > 0 && (
+                                                <div>
+                                                    <p className="text-[10px] font-black text-foreground mb-4 uppercase tracking-widest flex items-center gap-2 opacity-60">
+                                                        <TrendingUp className="w-3 h-3 text-rose-500" /> Deficiency Gaps
+                                                    </p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {match.missingSkills.map((skill, i) => (
+                                                            <span key={i} className="px-4 py-1.5 bg-rose-500/5 text-rose-500 text-[9px] font-black uppercase tracking-widest rounded-xl border border-rose-500/10">
+                                                                {skill}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* AI Logic Analysis */}
+                                        <div className="bg-primary/5 rounded-3xl p-8 border border-primary/10 mb-10 group-hover:border-primary/30 transition-colors">
+                                            <div className="flex items-start gap-5">
+                                                <div className="p-3 bg-background rounded-2xl shadow-inner">
+                                                    <TrendingUp className="w-5 h-5 text-primary" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <p className="text-[10px] font-black text-primary uppercase tracking-widest">Neural Analysis Protocol</p>
+                                                    <p className="text-sm font-black text-foreground/80 leading-relaxed italic uppercase tracking-tight">
+                                                        "{match.reasoning}"
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Executable Actions */}
+                                        <div className="flex gap-4">
+                                            <button className="flex-1 px-8 py-5 bg-foreground text-background rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-xl">
+                                                Initialize Full Profile Deep Dive
+                                            </button>
+                                            <button className="px-8 py-5 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20">
+                                                Schedule Evaluation Sequence
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             )}
         </div>

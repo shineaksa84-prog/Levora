@@ -1,18 +1,32 @@
-import { useState } from 'react';
-import { FileText, Upload, Shield, AlertTriangle, Download, Trash2, Eye } from 'lucide-react';
-
-const MOCK_DOCS = [
-    { id: 1, name: 'Aadhaar Card.pdf', category: 'Identity', uploaded: '2023-01-15', status: 'Verified', expiry: null },
-    { id: 2, name: 'Passport_Front.jpg', category: 'Identity', uploaded: '2022-06-20', status: 'Verified', expiry: '2024-02-01' }, // Near expiry
-    { id: 3, name: 'Degree_Certificate.pdf', category: 'Education', uploaded: '2023-01-20', status: 'Pending Verification', expiry: null },
-];
+import { useState, useEffect } from 'react';
+import { FileText, Upload, Shield, AlertTriangle, Download, Trash2, Eye, X, Loader2 } from 'lucide-react';
+import { getDocuments, uploadDocument, deleteDocumentResource } from '../../lib/services/documentService';
 
 export default function DocumentVault() {
-    const [docs, setDocs] = useState(MOCK_DOCS);
+    const [docs, setDocs] = useState([]);
     const [filter, setFilter] = useState('All');
+    const [loading, setLoading] = useState(true);
+    const [showUploadModal, setShowUploadModal] = useState(false);
 
-    const handleDelete = (id) => {
-        setDocs(docs.filter(d => d.id !== id));
+    useEffect(() => {
+        loadDocuments();
+    }, []);
+
+    const loadDocuments = async () => {
+        setLoading(true);
+        const data = await getDocuments('EMP-001'); // Mock ID
+        setDocs(data);
+        setLoading(false);
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this document protocol?')) return;
+        try {
+            await deleteDocumentResource(id);
+            setDocs(docs.filter(d => d.id !== id));
+        } catch (error) {
+            alert('Failed to delete document.');
+        }
     };
 
     return (
@@ -27,7 +41,10 @@ export default function DocumentVault() {
                         Securely store and manage your personal records.
                     </p>
                 </div>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg transition-colors">
+                <button
+                    onClick={() => setShowUploadModal(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg transition-colors"
+                >
                     <Upload className="w-4 h-4" /> Upload Document
                 </button>
             </div>
@@ -68,7 +85,17 @@ export default function DocumentVault() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {docs.filter(d => filter === 'All' || d.category === filter).map(doc => (
+                        {loading ? (
+                            <tr>
+                                <td colSpan="5" className="px-6 py-12 text-center text-gray-400">
+                                    <Loader2 className="w-8 h-8 animate-spin mx-auto opacity-20" />
+                                </td>
+                            </tr>
+                        ) : docs.filter(d => filter === 'All' || d.category === filter).length === 0 ? (
+                            <tr>
+                                <td colSpan="5" className="px-6 py-12 text-center text-gray-400 italic">No document vectors found in this category.</td>
+                            </tr>
+                        ) : docs.filter(d => filter === 'All' || d.category === filter).map(doc => (
                             <tr key={doc.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
@@ -104,13 +131,115 @@ export default function DocumentVault() {
                         ))}
                     </tbody>
                 </table>
+            </div>
 
-                {docs.length === 0 && (
-                    <div className="p-12 text-center text-gray-400 text-sm">
-                        <Shield className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                        No documents found in this category.
+            {showUploadModal && (
+                <UploadDocumentModal
+                    onClose={() => setShowUploadModal(false)}
+                    onSuccess={() => {
+                        setShowUploadModal(false);
+                        loadDocuments();
+                    }}
+                />
+            )}
+        </div>
+    );
+}
+
+function UploadDocumentModal({ onClose, onSuccess }) {
+    const [formData, setFormData] = useState({
+        name: '',
+        category: 'Identity',
+        expiry: '',
+        employeeId: 'EMP-001'
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            await uploadDocument(formData);
+            onSuccess();
+        } catch (err) {
+            setError('Vault error: Document could not be committed to secure storage.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="bg-blue-600 p-6 text-white flex justify-between items-center">
+                    <div>
+                        <h3 className="text-xl font-bold">Secure Document Upload</h3>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-200">Vault Protocol Initiation</p>
                     </div>
-                )}
+                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    {error && (
+                        <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-xs font-bold flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4" /> {error}
+                        </div>
+                    )}
+
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Document Label</label>
+                        <input
+                            required
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white font-bold text-sm outline-none transition-all"
+                            value={formData.name}
+                            onChange={e => setFormData({ ...formData, name: e.target.value })}
+                            placeholder="e.g. Passport Front Page"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Category</label>
+                            <select
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 font-bold text-sm outline-none"
+                                value={formData.category}
+                                onChange={e => setFormData({ ...formData, category: e.target.value })}
+                            >
+                                <option>Identity</option>
+                                <option>Education</option>
+                                <option>Financial</option>
+                                <option>Certifications</option>
+                            </select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Expiry (Optional)</label>
+                            <input
+                                type="date"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 font-bold text-sm outline-none"
+                                value={formData.expiry}
+                                onChange={e => setFormData({ ...formData, expiry: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center bg-gray-50">
+                        <Upload className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                        <p className="text-xs text-gray-500 font-medium">Click to select or drag document file</p>
+                        <p className="text-[10px] text-gray-400 mt-1">PDF, JPG, PNG (Max 5MB)</p>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-xl shadow-blue-600/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                    >
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                        Upload to Vault
+                    </button>
+                </form>
             </div>
         </div>
     );

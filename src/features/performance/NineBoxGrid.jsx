@@ -1,71 +1,87 @@
-import { useState } from 'react';
-import { Grid, MousePointer2 } from 'lucide-react';
-
-const BOXES = [
-    { id: '1A', name: 'Rough Diamond', color: 'bg-yellow-100 border-yellow-200' }, // High Pot, Low Perf
-    { id: '1B', name: 'Future Star', color: 'bg-green-100 border-green-200' }, // High Pot, Med Perf
-    { id: '1C', name: 'Star Performer', color: 'bg-green-200 border-green-300' }, // High Pot, High Perf
-    { id: '2A', name: 'Inconsistent', color: 'bg-orange-100 border-orange-200' }, // Med Pot, Low Perf
-    { id: '2B', name: 'Core Player', color: 'bg-blue-50 border-blue-200' }, // Med Pot, Med Perf
-    { id: '2C', name: 'High Performer', color: 'bg-green-50 border-green-200' }, // Med Pot, High Perf
-    { id: '3A', name: 'Talent Risk', color: 'bg-red-100 border-red-200' }, // Low Pot, Low Perf
-    { id: '3B', name: 'Effective', color: 'bg-gray-100 border-gray-200' }, // Low Pot, Med Perf
-    { id: '3C', name: 'Trusted Pro', color: 'bg-blue-100 border-blue-200' }, // Low Pot, High Perf
-];
-
-const EMPLOYEES = [
-    { id: 1, name: 'Alex', box: '1C' }, { id: 2, name: 'Sam', box: '2B' }, { id: 3, name: 'Jordan', box: '3A' },
-    { id: 4, name: 'Casey', box: '1B' }, { id: 5, name: 'Taylor', box: '2B' },
-];
+import { useState, useEffect } from 'react';
+import { Grid, MousePointer2, User, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { getTalentCalibrationMatrix } from '../../lib/services/performanceService';
 
 export default function NineBoxGrid() {
     const [selectedEmp, setSelectedEmp] = useState(null);
+    const [matrix, setMatrix] = useState({ boxes: [], employees: [] });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function loadMatrix() {
+            try {
+                const data = await getTalentCalibrationMatrix();
+                setMatrix(data);
+            } catch (err) {
+                console.error("Failed to load matrix", err);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadMatrix();
+    }, []);
+
+    if (loading) return (
+        <div className="flex justify-center items-center h-96">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        </div>
+    );
+
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center bg-gray-900 text-white p-6 rounded-2xl shadow-lg">
+            <div className="flex justify-between items-center glass-card p-6 bg-primary/5">
                 <div>
                     <h2 className="text-xl font-bold flex items-center gap-2">
-                        <Grid className="w-6 h-6 text-indigo-400" />
-                        9-Box Talent Matrix
+                        <Grid className="w-6 h-6 text-primary" />
+                        Aero Talent Calibration <span className="text-[10px] font-black uppercase tracking-widest bg-primary/20 text-primary px-2 py-1 rounded ml-2">Neural Matrix</span>
                     </h2>
-                    <p className="text-gray-400 text-sm mt-1">
-                        Calibrate talent by mapping <strong>Performance</strong> vs <strong>Potential</strong>.
+                    <p className="text-muted-foreground text-sm mt-1">
+                        Synthesizing <strong>Potential</strong> vs <strong>Performance</strong> indices.
                     </p>
                 </div>
-                <div className="flex items-center gap-2 text-xs bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-700">
-                    <MousePointer2 className="w-4 h-4 text-indigo-400" /> Click to view details
+                <div className="hidden md:flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
+                    <MousePointer2 className="w-3.5 h-3.5 text-primary" /> Select Node for Insight
                 </div>
             </div>
 
-            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm relative">
-                {/* Labels */}
-                <div className="absolute left-2 top-1/2 -translate-y-1/2 -rotate-90 text-xs font-bold text-gray-400 tracking-widest uppercase">
-                    Potential (Low → High)
+            <div className="glass-card p-8 bg-card/30 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
+
+                {/* Axes Labels */}
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 -rotate-90 text-[10px] font-black text-primary tracking-[0.3em] uppercase">
+                    Architectural Potential
                 </div>
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs font-bold text-gray-400 tracking-widest uppercase">
-                    Performance (Low → High)
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] font-black text-primary tracking-[0.3em] uppercase">
+                    Operational Performance
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 ml-8 mb-8 pb-8">
-                    {BOXES.map(box => {
-                        const boxEmps = EMPLOYEES.filter(e => e.box === box.id);
+                <div className="grid grid-cols-3 gap-4 pl-12 pb-12">
+                    {matrix.boxes.map(box => {
+                        const boxEmps = (matrix.employees || []).filter(e => e.box === box.id);
                         return (
-                            <div key={box.id} className={`${box.color} border-2 rounded-xl h-32 p-3 relative hover:scale-[1.02] transition-transform`}>
-                                <span className="absolute top-2 left-2 text-[10px] font-bold uppercase text-gray-600 bg-white/50 px-2 py-0.5 rounded backdrop-blur-sm">
-                                    {box.name}
-                                </span>
+                            <div key={box.id} className={`border rounded-2xl h-36 p-4 relative group transition-all hover:shadow-[0_0_30px_rgba(226,149,120,0.1)] ${box.color}`}>
+                                <div className="flex justify-between items-start">
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-primary/80">
+                                        {box.name}
+                                    </span>
+                                    <span className="text-[8px] font-bold opacity-30 group-hover:opacity-100 transition-opacity">
+                                        {box.id}
+                                    </span>
+                                </div>
 
-                                <div className="mt-6 flex flex-wrap gap-2">
+                                <div className="mt-4 flex flex-wrap gap-2">
                                     {boxEmps.map(emp => (
-                                        <div
+                                        <motion.div
                                             key={emp.id}
+                                            whileHover={{ scale: 1.1, y: -2 }}
                                             onClick={() => setSelectedEmp(emp)}
-                                            className="w-8 h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center text-xs font-bold shadow-sm cursor-pointer hover:bg-indigo-600 hover:text-white transition-colors"
+                                            className="w-10 h-10 rounded-xl bg-card border border-primary/20 flex items-center justify-center text-[10px] font-black shadow-lg cursor-pointer hover:bg-primary hover:text-primary-foreground hover:border-transparent transition-all"
                                             title={emp.name}
                                         >
-                                            {emp.name.charAt(0)}
-                                        </div>
+                                            {emp.avatar}
+                                        </motion.div>
                                     ))}
                                 </div>
                             </div>
@@ -75,20 +91,33 @@ export default function NineBoxGrid() {
             </div>
 
             {selectedEmp && (
-                <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex justify-between items-center animate-in fade-in slide-in-from-bottom-2 duration-200">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-indigo-200 flex items-center justify-center font-bold text-indigo-800">
-                            {selectedEmp.name.charAt(0)}
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="glass-card p-6 bg-primary/10 border-primary/20 flex justify-between items-center"
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center font-black text-lg shadow-lg">
+                            {selectedEmp.avatar}
                         </div>
                         <div>
-                            <h4 className="font-bold text-gray-900">{selectedEmp.name}</h4>
-                            <p className="text-xs text-gray-600">Current Zone: <strong>{BOXES.find(b => b.id === selectedEmp.box).name}</strong></p>
+                            <h4 className="text-lg font-black tracking-tight">{selectedEmp.name}</h4>
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest leading-none mt-1">{selectedEmp.role}</p>
+                            <div className="flex items-center gap-2 mt-3">
+                                <span className="text-[10px] font-black px-2 py-0.5 rounded bg-primary text-primary-foreground uppercase tracking-tighter">
+                                    Zone: {matrix.boxes.find(b => b.id === selectedEmp.box)?.name}
+                                </span>
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase italic px-2 py-0.5 border border-white/10 rounded">
+                                    {matrix.boxes.find(b => b.id === selectedEmp.box)?.level}
+                                </span>
+                            </div>
                         </div>
                     </div>
-                    <div className="text-sm">
-                        <button className="text-indigo-600 font-bold hover:underline">View Profile</button>
+                    <div className="flex gap-3 text-xs font-black uppercase tracking-widest">
+                        <button className="px-4 py-2 hover:bg-white/5 rounded-lg transition-colors border border-transparent hover:border-white/10">View Bio-Profile</button>
+                        <button className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl shadow-lg shadow-primary/20 active:scale-95 transition-all">Strategic Dev-Plan</button>
                     </div>
-                </div>
+                </motion.div>
             )}
         </div>
     );

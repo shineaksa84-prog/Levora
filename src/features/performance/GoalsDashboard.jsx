@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Target, TrendingUp, Calendar, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
-import { getEmployeeGoals, updateGoalProgress } from '../../lib/services/performanceService';
+import { getEmployeeGoals, updateGoalProgress, createGoal } from '../../lib/services/performanceService';
+import { toast } from '../../lib/services/toastService';
+import AddGoalModal from './AddGoalModal';
 
 export default function GoalsDashboard() {
     const [goals, setGoals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all'); // all, active, completed
+    const [showAddModal, setShowAddModal] = useState(false);
 
     useEffect(() => {
         loadGoals();
@@ -21,6 +24,37 @@ export default function GoalsDashboard() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleAddGoal = async (goalData) => {
+        try {
+            const newGoal = await createGoal({ ...goalData, progress: 0, status: 'on-track' });
+            setGoals([newGoal, ...goals]);
+            toast.success("Goal created successfully!");
+        } catch (err) {
+            toast.error("Failed to create goal.");
+        }
+    };
+
+    const handleProgressUpdateLocal = async (goalId, newProgress, updates = {}) => {
+        try {
+            await updateGoalProgress(goalId, parseInt(newProgress), updates);
+            setGoals(prev => prev.map(g =>
+                g.id === goalId ? { ...g, ...updates, progress: parseInt(newProgress) } : g
+            ));
+        } catch (error) {
+            console.error('Error updating progress:', error);
+        }
+    };
+
+    const handleKRUpdate = (goal, krId, newValue) => {
+        const updatedKRs = goal.keyResults.map(kr =>
+            kr.id === krId ? { ...kr, current: parseInt(newValue) } : kr
+        );
+        const avgProgress = Math.round(
+            updatedKRs.reduce((acc, kr) => acc + (kr.current / kr.target), 0) / updatedKRs.length * 100
+        );
+        handleProgressUpdateLocal(goal.id, avgProgress, { keyResults: updatedKRs });
     };
 
     const getStatusColor = (status) => {
@@ -55,13 +89,22 @@ export default function GoalsDashboard() {
 
     return (
         <div className="space-y-6">
+            <AddGoalModal
+                isOpen={showAddModal}
+                onClose={() => setShowAddModal(false)}
+                onAdd={handleAddGoal}
+            />
+
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-foreground">Goals & Objectives</h1>
                     <p className="text-muted-foreground mt-1">Track and manage your performance goals</p>
                 </div>
-                <button className="gradient-primary text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity shadow-lg">
+                <button
+                    onClick={() => setShowAddModal(true)}
+                    className="gradient-primary text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity shadow-lg"
+                >
                     <Plus className="w-5 h-5" />
                     New Goal
                 </button>
@@ -131,8 +174,8 @@ export default function GoalsDashboard() {
                         key={f}
                         onClick={() => setFilter(f)}
                         className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === f
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
                             }`}
                     >
                         {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -171,17 +214,28 @@ export default function GoalsDashboard() {
                             </div>
                         </div>
 
-                        {/* Progress Bar */}
                         <div className="mb-4">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm font-medium text-foreground">Progress</span>
                                 <span className="text-sm font-bold text-primary">{goal.progress}%</span>
                             </div>
-                            <div className="w-full bg-muted rounded-full h-2">
-                                <div
-                                    className="gradient-primary h-2 rounded-full transition-all duration-300"
-                                    style={{ width: `${goal.progress}%` }}
-                                />
+                            <div className="flex items-center gap-4">
+                                <div className="flex-1 bg-muted rounded-full h-2">
+                                    <div
+                                        className="gradient-primary h-2 rounded-full transition-all duration-300"
+                                        style={{ width: `${goal.progress}%` }}
+                                    />
+                                </div>
+                                {goal.type === 'SMART' && (
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={goal.progress}
+                                        onChange={(e) => handleProgressUpdateLocal(goal.id, e.target.value)}
+                                        className="w-24 h-1.5 accent-primary cursor-pointer"
+                                    />
+                                )}
                             </div>
                         </div>
 
@@ -196,12 +250,20 @@ export default function GoalsDashboard() {
                                             <span className="text-sm font-medium text-muted-foreground">
                                                 {kr.current} / {kr.target} {kr.unit}
                                             </span>
-                                            <div className="w-24 bg-background rounded-full h-1.5">
+                                            <div className="w-24 bg-background rounded-full h-1.5 overflow-hidden">
                                                 <div
                                                     className="bg-primary h-1.5 rounded-full"
-                                                    style={{ width: `${(kr.current / kr.target) * 100}%` }}
+                                                    style={{ width: `${Math.min((kr.current / kr.target) * 100, 100)}%` }}
                                                 />
                                             </div>
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max={kr.target}
+                                                value={kr.current}
+                                                onChange={(e) => handleKRUpdate(goal, kr.id, e.target.value)}
+                                                className="w-20 h-1 accent-primary cursor-pointer"
+                                            />
                                         </div>
                                     </div>
                                 ))}

@@ -10,6 +10,7 @@ import {
     BarChart3,
     Zap,
     Shield,
+    ShieldAlert,
     TrendingUp,
     DollarSign,
     Heart,
@@ -41,7 +42,8 @@ export const ROLES = {
     EMPLOYEE: 'employee',
     CANDIDATE: 'candidate',
     FINANCE: 'finance',
-    IT_ADMIN: 'it_admin'
+    IT_ADMIN: 'it_admin',
+    VENDOR: 'vendor'
 };
 
 const BASE = '/app';
@@ -61,11 +63,13 @@ export const ROLE_CONFIG = {
             { name: 'Engagement', href: `${BASE}/engagement`, icon: Heart },
             { name: 'Offboarding', href: `${BASE}/offboarding`, icon: LogOut },
             { name: 'Analytics', href: `${BASE}/analytics`, icon: BarChart3 },
+            { name: 'Attrition Risk', href: `${BASE}/attrition-risk`, icon: ShieldAlert },
             { name: 'AI Hub', href: `${BASE}/ai-hub`, icon: MessageSquare },
             { name: 'Automation', href: `${BASE}/automation`, icon: Zap },
             { name: 'Compliance', href: `${BASE}/compliance`, icon: Shield },
             { name: 'Interviews', href: `${BASE}/interviews`, icon: Video },
             { name: 'Sourcing', href: `${BASE}/sourcing`, icon: Search },
+            { name: 'Admin Toolkit', href: `${BASE}/toolkit`, icon: Zap },
             { name: 'Settings', href: `${BASE}/settings`, icon: Settings },
         ]
     },
@@ -105,6 +109,7 @@ export const ROLE_CONFIG = {
             { name: 'Onboarding', href: `${BASE}/employees`, icon: UserCheck },
             { name: 'Compliance', href: `${BASE}/compliance`, icon: Shield },
             { name: 'Offboarding', href: `${BASE}/offboarding`, icon: LogOut },
+            { name: 'Attrition Risk', href: `${BASE}/attrition-risk`, icon: ShieldAlert },
             { name: 'Settings', href: `${BASE}/settings`, icon: Settings },
         ]
     },
@@ -154,6 +159,26 @@ export const ROLE_CONFIG = {
             { name: 'Jobs', href: `${BASE}/jobs`, icon: Briefcase },
             { name: 'Interviews', href: `${BASE}/interviews`, icon: Video },
             { name: 'Settings', href: `${BASE}/settings`, icon: Settings },
+        ]
+    },
+    [ROLES.IT_ADMIN]: {
+        label: 'IT Administrator',
+        dashboard: 'ITAdminDashboard',
+        navigation: [
+            { name: 'Dashboard', href: `${BASE}`, icon: LayoutDashboard },
+            { name: 'Assets', href: `${BASE}/assets`, icon: Briefcase },
+            { name: 'Tickets', href: `${BASE}/tickets`, icon: Ticket },
+            { name: 'Systems', href: `${BASE}/systems`, icon: Zap },
+            { name: 'Security', href: `${BASE}/security`, icon: Shield },
+            { name: 'Users', href: `${BASE}/admin-users`, icon: Users },
+            { name: 'Settings', href: `${BASE}/settings`, icon: Settings },
+        ]
+    },
+    [ROLES.VENDOR]: {
+        label: 'Agency Partner',
+        dashboard: 'VendorDashboard',
+        navigation: [
+            { name: 'Portal', href: '/agency/app', icon: LayoutDashboard },
         ]
     }
 };
